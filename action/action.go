@@ -39,17 +39,17 @@ func NewAction(optionStrings []string, dest string, nargs *int, constVal interfa
 // GetKwargs returns the keyword arguments associated with the Action.
 func (a *Action) GetKwargs() map[string]interface{} {
 	return map[string]interface{}{
-		"option_strings": a.OptionStrings,
-		"dest":           a.Dest,
-		"nargs":          a.Nargs,
-		"const":          a.Const,
-		"default":        a.Default,
-		"type":           a.Type,
-		"choices":        a.Choices,
-		"required":       a.Required,
-		"help":           a.Help,
-		"metavar":        a.Metavar,
-		"deprecated":     a.Deprecated,
+		"optionStrings": a.OptionStrings,
+		"dest":          a.Dest,
+		"nargs":         a.Nargs,
+		"const":         a.Const,
+		"default":       a.Default,
+		"type":          a.Type,
+		"choices":       a.Choices,
+		"required":      a.Required,
+		"help":          a.Help,
+		"metavar":       a.Metavar,
+		"deprecated":    a.Deprecated,
 	}
 }
 
