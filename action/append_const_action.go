@@ -1,43 +1,47 @@
 package action
 
 import (
-	"fmt"
-	"reflect"
+	"argparse/copy_items"
+	"argparse/namespace"
 )
 
 // AppendConstAction represents an action that appends a constant value to a slice.
 type AppendConstAction struct {
-	Action        // Embedding Action to reuse functionality
-	Const         interface{}
-	Dest          string
-	OptionStrings []string
+	Action // Embedding Action to reuse functionality
 }
 
 // NewAppendConstAction creates a new AppendConstAction.
-func NewAppendConstAction(optionStrings []string, dest string, constVal interface{}, help string) *AppendConstAction {
+func NewAppendConstAction(
+	optionStrings []string,
+	dest string,
+	constVal any,
+	defaultVal any,
+	required bool,
+	help string,
+	metavar string,
+	deprecated bool,
+) (*AppendConstAction, error) {
 	return &AppendConstAction{
-		Action:        Action{OptionStrings: optionStrings, Dest: dest},
-		Const:         constVal,
-		Dest:          dest,
-		OptionStrings: optionStrings,
-	}
+		Action: Action{
+			OptionStrings: optionStrings,
+			Dest:          dest,
+			Nargs:         0,
+			Const:         constVal,
+			Default:       defaultVal,
+			Required:      required,
+			Help:          help,
+			Metavar:       metavar,
+			Deprecated:    deprecated,
+		},
+	}, nil
 }
 
-// SetValue appends the constant value to the specified destination in the namespace.
-func (a *AppendConstAction) SetValue(namespace interface{}) error {
-	destField := reflect.ValueOf(namespace).Elem().FieldByName(a.Dest)
-
-	if destField.IsValid() && destField.CanSet() {
-		// Check if it's a slice and append the constant value
-		if destField.Kind() == reflect.Slice {
-			destField.Set(reflect.Append(destField, reflect.ValueOf(a.Const)))
-		} else {
-			// Handle error if the field is not a slice
-			return fmt.Errorf("destination %s is not a slice", a.Dest)
-		}
-	} else {
-		return fmt.Errorf("destination %s not found or cannot be set", a.Dest)
+func (a *AppendConstAction) Call(parser any, namespace *namespace.Namespace, values any, option_string string) {
+	items, found := namespace.Get(a.Dest)
+	if !found {
+		items = []any{}
 	}
-
-	return nil
+	items = copy_items.CopyItems(items)
+	items = append(items.([]any), a.Const)
+	namespace.Set(a.Dest, items)
 }

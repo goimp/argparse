@@ -1,15 +1,15 @@
 package action
 
-// StoreTrueAction represents an action that stores a constant true value in the namespace.
-type StoreTrueAction struct {
+// StoreFalseAction represents an action that stores a constant false value in the namespace.
+type StoreFalseAction struct {
 	StoreConstAction // Embedding StoreConstAction to reuse functionality
 }
 
-func NewStoreTrueAction(optionStrings []string, dest string, defaultVal bool, required bool, help string, deprecated bool) (*StoreTrueAction, error) {
+func NewStoreFalseAction(optionStrings []string, dest string, defaultVal bool, required bool, help string, deprecated bool) (*StoreFalseAction, error) {
 	if storeConstAction, err := NewStoreConstAction(
 		optionStrings,
 		dest,
-		true,
+		false,
 		defaultVal,
 		required,
 		help,
@@ -18,7 +18,7 @@ func NewStoreTrueAction(optionStrings []string, dest string, defaultVal bool, re
 	); err != nil {
 		return nil, err
 	} else {
-		return &StoreTrueAction{
+		return &StoreFalseAction{
 			StoreConstAction: *storeConstAction,
 		}, nil
 	}

@@ -8,9 +8,9 @@ import (
 // If the input is nil, it returns an empty slice.
 // If the input is a slice, it returns a shallow copy of the slice.
 // For other types, it uses reflection to attempt a shallow copy.
-func CopyItems(items interface{}) interface{} {
+func CopyItems(items any) any {
 	if items == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	// Handle case where items is a slice
@@ -27,7 +27,7 @@ func CopyItems(items interface{}) interface{} {
 }
 
 // shallowCopy performs a shallow copy of non-slice types.
-func shallowCopy(item interface{}) interface{} {
+func shallowCopy(item any) any {
 	v := reflect.ValueOf(item)
 	if !v.IsValid() || v.Kind() == reflect.Ptr && v.IsNil() {
 		return nil

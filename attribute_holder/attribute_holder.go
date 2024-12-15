@@ -22,7 +22,7 @@ func (a *AttributeHolder) Repr() string {
 
 	// Collect arguments
 	var argStrings []string
-	starArgs := make(map[string]interface{})
+	starArgs := make(map[string]any)
 
 	// Handle args and kwargs
 	argStrings = append(argStrings, a.GetArgs()...)
@@ -50,8 +50,8 @@ func (a *AttributeHolder) GetArgs() []string {
 
 // GetKwargs returns the keyword arguments of the struct.
 // It collects all exported fields of the struct as key-value pairs.
-func (a *AttributeHolder) GetKwargs(v reflect.Value) map[string]interface{} {
-	kwargs := make(map[string]interface{})
+func (a *AttributeHolder) GetKwargs(v reflect.Value) map[string]any {
+	kwargs := make(map[string]any)
 
 	// Get the type of the current struct
 	t := v.Type()
@@ -92,21 +92,3 @@ func isLetter(r rune) bool {
 func isLetterOrDigit(r rune) bool {
 	return isLetter(r) || ('0' <= r && r <= '9')
 }
-
-// func main() {
-// 	// Example usage
-// 	type MyStruct struct {
-// 		AttributeHolder
-// 		Name  string
-// 		Value int
-// 		Extra string
-// 	}
-
-// 	instance := &MyStruct{
-// 		Name:  "Example",
-// 		Value: 42,
-// 		Extra: "ExtraField",
-// 	}
-
-// 	fmt.Println(instance.Repr()) // Output: MyStruct(Name=Example, Value=42, Extra=ExtraField)
-// }

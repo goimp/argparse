@@ -11,23 +11,23 @@ import (
 // for comparison, existence check, and string representation.
 type Namespace struct {
 	attribute_holder.AttributeHolder
-	attributes map[string]interface{}
+	attributes map[string]any
 }
 
 // NewNamespace creates a new Namespace with the given attributes.
-func NewNamespace(attributes map[string]interface{}) *Namespace {
+func NewNamespace(attributes map[string]any) *Namespace {
 	return &Namespace{
 		attributes: attributes,
 	}
 }
 
 // Set adds or updates an attribute in the Namespace.
-func (n *Namespace) Set(name string, value interface{}) {
+func (n *Namespace) Set(name string, value any) {
 	n.attributes[name] = value
 }
 
 // Get retrieves the value of an attribute from the Namespace.
-func (n *Namespace) Get(name string) (interface{}, bool) {
+func (n *Namespace) Get(name string) (any, bool) {
 	val, found := n.attributes[name]
 	return val, found
 }
@@ -56,28 +56,3 @@ func (n *Namespace) Repr() string {
 
 	return fmt.Sprintf("Namespace(%s)", strings.Join(argStrings, ", "))
 }
-
-// // Example usage
-// func main() {
-// 	// Create a new Namespace instance
-// 	ns := NewNamespace(map[string]interface{}{"key1": "value1", "key2": 42})
-
-// 	// Print the string representation
-// 	fmt.Println(ns.Repr()) // Output: Namespace(key1=value1, key2=42)
-
-// 	// Compare namespaces for equality
-// 	ns2 := NewNamespace(map[string]interface{}{"key1": "value1", "key2": 42})
-// 	fmt.Println("Namespaces are equal:", ns.Equals(ns2)) // Output: true
-
-// 	// Check if a key exists
-// 	fmt.Println("Contains 'key1':", ns.Contains("key1")) // Output: true
-
-// 	// Retrieve a value by key
-// 	if val, found := ns.Get("key2"); found {
-// 		fmt.Println("key2:", val) // Output: key2: 42
-// 	}
-
-// 	// Add a new attribute
-// 	ns.Set("key3", "new value")
-// 	fmt.Println("Updated Namespace:", ns.Repr()) // Output: Namespace(key1=value1, key2=42, key3=new value)
-// }

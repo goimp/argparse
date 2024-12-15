@@ -1,31 +1,53 @@
 package action
 
 import (
-	"fmt"
-	"os"
+	"argparse"
+	"argparse/argument_parser"
+	"argparse/namespace"
 )
 
 // HelpAction represents an action that displays the help message.
 type HelpAction struct {
 	Action
-	OptionStrings []string
 }
 
 // NewHelpAction creates a new HelpAction.
-func NewHelpAction(optionStrings []string) *HelpAction {
-	return &HelpAction{
-		Action:        Action{OptionStrings: optionStrings},
-		OptionStrings: optionStrings,
+// NewHelpAction creates a new HelpAction.
+func NewHelpAction(
+	optionStrings []string,
+	dest string,
+	defaultVal any,
+	help string,
+	deprecated bool,
+) (*HelpAction, error) {
+
+	// Default dest to SUPPRESS if empty
+	if dest == "" {
+		dest = argparse.SUPPRESS
 	}
+
+	// Default defaultVal to SUPPRESS if nil
+	if defaultVal == nil {
+		defaultVal = argparse.SUPPRESS
+	}
+
+	// Create and return the HelpAction instance
+	return &HelpAction{
+		Action: Action{
+			OptionStrings: optionStrings,
+			Dest:          dest,
+			Nargs:         0,
+			Default:       defaultVal,
+			Help:          help,
+			Deprecated:    deprecated,
+		},
+	}, nil
 }
 
 // SetValue prints the help message and exits the program.
-func (a *HelpAction) SetValue() {
-	// Print the help message (for demonstration purposes, we'll use a simple message)
-	fmt.Println("Usage: [options]")
-	fmt.Println("Options:")
-	fmt.Println("  --help        Show this help message")
-
-	// Exit the program after printing help
-	os.Exit(0)
+func (a *HelpAction) Call(parser *argument_parser.ArgumentParser, namespace *namespace.Namespace, values any, option_string string) {
+	if parser != nil {
+		parser.PrintHelp(nil)
+		parser.Exit(0, "")
+	}
 }

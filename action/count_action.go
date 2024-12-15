@@ -1,42 +1,50 @@
 package action
 
 import (
-	"fmt"
-	"reflect"
+	"argparse/namespace"
 )
 
 // CountAction represents an action that counts the occurrences of a command-line option.
 type CountAction struct {
-	Action        // Embedding Action to reuse functionality
-	Dest          string
-	OptionStrings []string
+	Action // Embedding Action to reuse functionality
 }
 
 // NewCountAction creates a new CountAction.
-func NewCountAction(optionStrings []string, dest string, help string) *CountAction {
+func NewCountAction(
+	optionStrings []string,
+	dest string,
+	defaultVal any,
+	required bool,
+	help string,
+	deprecated bool,
+) (*CountAction, error) {
 	return &CountAction{
-		Action:        Action{OptionStrings: optionStrings, Dest: dest},
-		Dest:          dest,
-		OptionStrings: optionStrings,
-	}
+		Action: Action{
+			OptionStrings: optionStrings,
+			Dest:          dest,
+			Nargs:         0,
+			Default:       defaultVal,
+			Required:      required,
+			Help:          help,
+			Deprecated:    deprecated,
+		},
+	}, nil
 }
 
-// SetValue increments the counter value in the namespace.
-func (a *CountAction) SetValue(namespace interface{}) error {
-	destField := reflect.ValueOf(namespace).Elem().FieldByName(a.Dest)
-
-	if destField.IsValid() && destField.CanSet() {
-		// Check if it's an integer field
-		if destField.Kind() == reflect.Int {
-			// Increment the counter
-			destField.SetInt(destField.Int() + 1)
-		} else {
-			// Handle error if the field is not an integer
-			return fmt.Errorf("destination %s is not an integer", a.Dest)
-		}
-	} else {
-		return fmt.Errorf("destination %s not found or cannot be set", a.Dest)
+func (a *CountAction) Call(parser any, namespace *namespace.Namespace, values any, option_string string) {
+	count, found := namespace.Get(a.Dest)
+	if !found || count == nil {
+		count = 0
 	}
-
-	return nil
+	namespace.Set(a.Dest, count.(int)+1)
 }
+
+// func (a *CountAction) Call(parser any, namespace *namespace.Namespace, values any, option_string string) {
+// 	var count int
+// 	if c, found := namespace.Get(a.Dest); found {
+// 		if castCount, ok := c.(int); ok {
+// 			count = castCount
+// 		}
+// 	}
+// 	namespace.Set(a.Dest, count+1)
+// }

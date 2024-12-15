@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	SUPPRESS               = "==SUPPRESS=="
+	SUPPRESS = "==SUPPRESS=="
 	OPTIONAL               = "?"
 	ZERO_OR_MORE           = "*"
 	ONE_OR_MORE            = "+"

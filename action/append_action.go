@@ -1,43 +1,72 @@
 package action
 
 import (
+	"argparse"
+	"argparse/copy_items"
+	"argparse/namespace"
 	"fmt"
-	"reflect"
 )
 
 // AppendAction represents an action that appends values to a slice.
 type AppendAction struct {
-	Action        // Embedding Action to reuse functionality
-	Default       interface{}
-	Dest          string
-	OptionStrings []string
+	Action // Embedding Action to reuse functionality
 }
 
 // NewAppendAction creates a new AppendAction.
-func NewAppendAction(optionStrings []string, dest string, defaultVal interface{}, help string) *AppendAction {
-	return &AppendAction{
-		Action:        Action{OptionStrings: optionStrings, Dest: dest},
-		Default:       defaultVal,
-		Dest:          dest,
-		OptionStrings: optionStrings,
+func NewAppendAction(
+	optionStrings []string,
+	dest string,
+	nargs any,
+	constVal any,
+	defaultVal any,
+	typ StringToAnyFunc,
+	choices []any,
+	required bool,
+	help string,
+	metavar string,
+	deprecated bool,
+) (*AppendAction, error) {
+
+	switch v := nargs.(type) {
+	case int:
+		if v == 0 {
+			return nil, fmt.Errorf(
+				"nargs for append actions must be != 0; if arg strings are not supplying the value to append, the append const action may be more appropriate",
+			)
+		}
+	case string:
+		if constVal != nil && v != argparse.OPTIONAL {
+			return nil, fmt.Errorf("nargs must %s to supply const", argparse.OPTIONAL)
+		}
+	case nil:
+		break
+	default:
+		return nil, fmt.Errorf("nargs must be an integer or a string literal (e.g., %s)", argparse.OPTIONAL)
 	}
+
+	return &AppendAction{
+		Action: Action{
+			OptionStrings: optionStrings,
+			Dest:          dest,
+			Nargs:         nargs,
+			Const:         constVal,
+			Default:       defaultVal,
+			Type:          typ,
+			Choices:       choices,
+			Required:      required,
+			Help:          help,
+			Metavar:       metavar,
+			Deprecated:    deprecated,
+		},
+	}, nil
 }
 
-// SetValue appends the value to the specified destination in the namespace.
-func (a *AppendAction) SetValue(namespace interface{}, value interface{}) error {
-	destField := reflect.ValueOf(namespace).Elem().FieldByName(a.Dest)
-
-	if destField.IsValid() && destField.CanSet() {
-		// Check if it's a slice and append the value
-		if destField.Kind() == reflect.Slice {
-			destField.Set(reflect.Append(destField, reflect.ValueOf(value)))
-		} else {
-			// Handle error if the field is not a slice
-			return fmt.Errorf("destination %s is not a slice", a.Dest)
-		}
-	} else {
-		return fmt.Errorf("destination %s not found or cannot be set", a.Dest)
+func (a *AppendAction) Call(parser any, namespace *namespace.Namespace, values any, option_string string) {
+	items, found := namespace.Get(a.Dest)
+	if !found {
+		items = []any{}
 	}
-
-	return nil
+	items = copy_items.CopyItems(items)
+	items = append(items.([]any), values)
+	namespace.Set(a.Dest, items)
 }
