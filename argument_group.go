@@ -36,5 +36,5 @@ func (a *ArgumentGroup) RemoveAction(action Action) {
 }
 
 func (a *ArgumentGroup) AddArgumentGroup(args []any, kwargs map[string]any) {
-	panic("Argument group can not be nested")
+	panic("argument group can not be nested")
 }

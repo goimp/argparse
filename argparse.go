@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	SUPPRESS = "==SUPPRESS=="
+	SUPPRESS               = "==SUPPRESS=="
 	OPTIONAL               = "?"
 	ZERO_OR_MORE           = "*"
 	ONE_OR_MORE            = "+"
@@ -13,6 +13,10 @@ const (
 	REMAINDER              = "..."
 	UNRECOGNIZED_ARGS_ATTR = "_unrecognized_args"
 )
+
+func ProgName(prog string) string {
+	return ""
+}
 
 // Greet returns a greeting message.
 func Greet(name string) string {
