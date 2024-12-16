@@ -6,7 +6,7 @@ type MutuallyExclusiveGroup struct {
 
 func NewMutuallyExclusiveGroup(
 	description string,
-	prefixChars any,
+	prefixChars []string,
 	argumentDefault any,
 	conflictHandler any,
 ) (*MutuallyExclusiveGroup, error) {

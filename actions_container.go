@@ -7,10 +7,10 @@ import (
 
 type ActionsContainer struct {
 	Description                string
-	PrefixChars                any
+	PrefixChars                []string
 	ArgumentDefault            any
 	ConflictHandler            any
-	registries                 map[any]any
+	registries                 map[string]any
 	actions                    []Action
 	optionStringActions        map[any]any
 	actionGroups               []any
@@ -22,7 +22,7 @@ type ActionsContainer struct {
 
 func NewActionsContainer(
 	description string,
-	prefixChars any,
+	prefixChars []string,
 	argumentDefault any,
 	conflictHandler any,
 ) (*ActionsContainer, error) {
@@ -32,8 +32,8 @@ func NewActionsContainer(
 		PrefixChars:                prefixChars,
 		ArgumentDefault:            argumentDefault,
 		ConflictHandler:            conflictHandler,
-		registries:                 make(map[any]any), // set up registries
-		actions:                    []Action{},        // action storage
+		registries:                 make(map[string]any), // set up registries
+		actions:                    []Action{},           // action storage
 		optionStringActions:        make(map[any]any),
 		actionGroups:               []any{}, // groups
 		mutuallyExclusiveGroups:    []any{},
@@ -43,7 +43,7 @@ func NewActionsContainer(
 	}
 
 	// register actions
-	container.Register("action", nil, NewStoreAction)
+	container.Register("action", "", NewStoreAction)
 	container.Register("action", "store", NewStoreAction)
 	container.Register("action", "store_const", NewStoreConstAction)
 	container.Register("action", "store_true", NewStoreTrueAction)
@@ -66,18 +66,18 @@ func NewActionsContainer(
 
 // Registration methods
 
-func (a *ActionsContainer) Register(registryName string, value any, object any) {
+func (a *ActionsContainer) Register(registryName string, value string, object any) {
 	// Check if the registry exists
 	registry, exists := a.registries[registryName]
 
 	if !exists {
 		// Initialize the registry as a map[any]any
-		registry = make(map[any]any)
+		registry = make(map[string]any)
 		a.registries[registryName] = registry
 	}
 
 	// Perform a type assertion to ensure registry is map[any]any
-	if regMap, ok := registry.(map[any]any); ok {
+	if regMap, ok := registry.(map[string]any); ok {
 		// Add the value-object pair to the registry
 		regMap[value] = object
 	} else {
@@ -134,20 +134,26 @@ func (a *ActionsContainer) GetDefault(dest string) any {
 
 // Adding argument actions
 
-func (a *ActionsContainer) AddArgument(args []any, kwargs map[string]any) {
-
+func (a *ActionsContainer) AddArgument(args []string, kwargs map[string]any) (any, error) {
+	// chars := a.PrefixChars
+	return nil, nil
 }
 
 func (a *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) {
-
+	group := NewArgumentGroup(
+		a,
+		kwargs["title"],
+		kwargs["description"],
+		
+	)
 }
 
 func (a *ActionsContainer) AddMutuallyExclusiveGroup(kwargs map[string]any) {
 
 }
 
-func (a *ActionsContainer) AddAction(action *Action) {
-
+func (a *ActionsContainer) AddAction(action *Action) *Action {
+	return &Action{}
 }
 
 func (a *ActionsContainer) RemoveAction(action *Action) {
