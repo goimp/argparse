@@ -66,14 +66,14 @@ func NewActionsContainer(
 
 // Registration methods
 
-func (a *ActionsContainer) Register(registryName string, value string, object any) {
+func (ac *ActionsContainer) Register(registryName string, value string, object any) {
 	// Check if the registry exists
-	registry, exists := a.registries[registryName]
+	registry, exists := ac.registries[registryName]
 
 	if !exists {
 		// Initialize the registry as a map[any]any
 		registry = make(map[string]any)
-		a.registries[registryName] = registry
+		ac.registries[registryName] = registry
 	}
 
 	// Perform a type assertion to ensure registry is map[any]any
@@ -85,9 +85,9 @@ func (a *ActionsContainer) Register(registryName string, value string, object an
 	}
 }
 
-func (a *ActionsContainer) RegistryGet(registryName string, value any, defaultValue any) any {
+func (ac *ActionsContainer) RegistryGet(registryName string, value any, defaultValue any) any {
 	// Check if the registry exists
-	registry, exists := a.registries[registryName]
+	registry, exists := ac.registries[registryName]
 	if !exists {
 		return defaultValue // Return the default value if the registry doesn't exist
 	}
@@ -107,77 +107,97 @@ func (a *ActionsContainer) RegistryGet(registryName string, value any, defaultVa
 // Namespace default accessor methods
 
 // SetDefaults updates the default values and the action defaults
-func (a *ActionsContainer) SetDefaults(kwargs map[string]any) {
+func (ac *ActionsContainer) SetDefaults(kwargs map[string]any) {
 	// Update the _defaults map
 	for key, value := range kwargs {
-		a.defaults[key] = value
+		ac.defaults[key] = value
 	}
 
 	// Update the default value of actions that match the keys in kwargs
-	for i := range a.actions {
-		if defaultValue, exists := kwargs[a.actions[i].Dest]; exists {
-			a.actions[i].Default = defaultValue
+	for i := range ac.actions {
+		if defaultValue, exists := kwargs[ac.actions[i].Dest]; exists {
+			ac.actions[i].Default = defaultValue
 		}
 	}
 }
 
-func (a *ActionsContainer) GetDefault(dest string) any {
+func (ac *ActionsContainer) GetDefault(dest string) any {
 	// Iterate over actions to find a matching dest with a non-nil default value
-	for _, action := range a.actions {
+	for _, action := range ac.actions {
 		if action.Dest == dest && action.Default != nil {
 			return action.Default
 		}
 	}
 	// Return the default from the _defaults map if it exists
-	return a.defaults[dest]
+	return ac.defaults[dest]
 }
 
 // Adding argument actions
 
-func (a *ActionsContainer) AddArgument(args []string, kwargs map[string]any) (any, error) {
-	// chars := a.PrefixChars
+type Argument struct {
+	OptionStrings []string // The command-line option strings
+	Dest          string   // The destination name where the value will be stored
+	Nargs         any      // The number of arguments to consume
+	Const         any      // The constant value for certain actions
+	Default       any      // The default value if the option is not specified
+	Type          Type     // The function to convert the string to the appropriate type
+	Choices       []any    // The valid values for this argument
+	Required      bool     // Whether the argument is required
+	Help          string   // The help description for the argument
+	Metavar       any      // The name to be used in help output
+	Deprecated    bool     // Whether the argument is deprecated
+}
+
+func (ac *ActionsContainer) AddArgument(argument Argument) (any, error) {
+	// chars := ac.PrefixChars
+
+	// if argument.OptionStrings != nil || len(argument.OptionStrings) == 1 {
+
+	// }
+
+	// kwargs := ac.GetPositionalKwargs(argument)
 	return nil, nil
 }
 
-func (a *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) {
-	group := NewArgumentGroup(
-		a,
-		kwargs["title"],
-		kwargs["description"],
-		
-	)
+func (ac *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) {
+	// group := NewArgumentGroup(
+	// 	a,
+	// 	kwargs["title"],
+	// 	kwargs["description"],
+
+	// )
 }
 
-func (a *ActionsContainer) AddMutuallyExclusiveGroup(kwargs map[string]any) {
+func (ac *ActionsContainer) AddMutuallyExclusiveGroup(kwargs map[string]any) {
 
 }
 
-func (a *ActionsContainer) AddAction(action *Action) *Action {
+func (ac *ActionsContainer) AddAction(action *Action) *Action {
 	return &Action{}
 }
 
-func (a *ActionsContainer) RemoveAction(action *Action) {
+func (ac *ActionsContainer) RemoveAction(action *Action) {
 
 }
 
-func (a *ActionsContainer) AddContainerAction(container *ActionsContainer) {
+func (ac *ActionsContainer) AddContainerAction(container *ActionsContainer) {
 
 }
 
-func (a *ActionsContainer) GetPositionalKwargs(dest string, kwargs map[string]any) {
+func (ac *ActionsContainer) GetPositionalKwargs(argument *Argument) {
 
 }
 
-func (a *ActionsContainer) GetOptionalKwargs(args []any, kwargs map[string]any) {
+func (ac *ActionsContainer) GetOptionalKwargs(args []any, kwargs map[string]any) {
 
 }
 
-func (a *ActionsContainer) PopActionClass(kwargs map[string]any, defaultAction *Action) {
+func (ac *ActionsContainer) PopActionClass(kwargs map[string]any, defaultAction *Action) {
 
 }
 
-func (a *ActionsContainer) GetHandler() (func(), error) {
-	switch a.ConflictHandler {
+func (ac *ActionsContainer) GetHandler() (func(), error) {
+	switch ac.ConflictHandler {
 	case "ignore":
 		return func() {
 			fmt.Println("Ignoring conflicts")
@@ -187,22 +207,22 @@ func (a *ActionsContainer) GetHandler() (func(), error) {
 			fmt.Println("Resolving conflicts")
 		}, nil
 	default:
-		return nil, fmt.Errorf("invalid conflict resolution value: %v", a.ConflictHandler)
+		return nil, fmt.Errorf("invalid conflict resolution value: %v", ac.ConflictHandler)
 	}
 }
 
-func (a *ActionsContainer) CheckConflict(action *Action) {
+func (ac *ActionsContainer) CheckConflict(action *Action) {
 
 }
 
-func (a *ActionsContainer) HandleConflictError(action *Action, conflictingActions []*Action) {
+func (ac *ActionsContainer) HandleConflictError(action *Action, conflictingActions []*Action) {
 
 }
 
-func (a *ActionsContainer) HandleConflictResolve(action *Action, conflictingActions []*Action) {
+func (ac *ActionsContainer) HandleConflictResolve(action *Action, conflictingActions []*Action) {
 
 }
 
-func (a *ActionsContainer) CheckHelp(action *Action) {
+func (ac *ActionsContainer) CheckHelp(action *Action) {
 	// if action.Help
 }

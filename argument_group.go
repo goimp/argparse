@@ -51,23 +51,23 @@ func NewArgumentGroup(
 	return group, nil
 }
 
-func (a *ArgumentGroup) AddAction(action *Action) *Action {
-	act := *a.ActionsContainer.AddAction(action)
-	a.groupActions = append(a.groupActions, &act)
+func (ag *ArgumentGroup) AddAction(action *Action) *Action {
+	act := *ag.ActionsContainer.AddAction(action)
+	ag.groupActions = append(ag.groupActions, &act)
 	return &act
 }
 
-func (a *ArgumentGroup) RemoveAction(dest string) error {
-	for i, action := range a.actions {
+func (ag *ArgumentGroup) RemoveAction(dest string) error {
+	for i, action := range ag.actions {
 		if action.Dest == dest {
 			// Remove the action by appending slices before and after the index
-			a.actions = append(a.actions[:i], a.actions[i+1:]...)
+			ag.actions = append(ag.actions[:i], ag.actions[i+1:]...)
 			return nil // Action removed successfully
 		}
 	}
 	return fmt.Errorf("action with dest %q not found", dest)
 }
 
-func (a *ArgumentGroup) AddArgumentGroup(args []any, kwargs map[string]any) {
+func (ag *ArgumentGroup) AddArgumentGroup(args []any, kwargs map[string]any) {
 	panic("argument group can not be nested")
 }

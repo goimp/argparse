@@ -19,124 +19,124 @@ func NewArgumentParser(kwargs map[string]any) (*ArgumentParser, error) {
 
 // Pretty __repr__ methods
 
-func (p *ArgumentParser) GetKwargs() {
+func (ap *ArgumentParser) GetKwargs() {
 
 }
 
 // Optional/Positional adding methods
 
-func (p *ArgumentParser) AddSubparsers(kwargs map[string]any) {
+func (ap *ArgumentParser) AddSubparsers(kwargs map[string]any) {
 
 }
 
-func (p *ArgumentParser) AddAction(action *Action) *Action {
+func (ap *ArgumentParser) AddAction(action *Action) *Action {
 	return &Action{}
 }
 
-func (p *ArgumentParser) GetOptionalActions() []*Action {
+func (ap *ArgumentParser) GetOptionalActions() []*Action {
 	return []*Action{}
 }
 
-func (p *ArgumentParser) GetPositionalActions() []*Action {
+func (ap *ArgumentParser) GetPositionalActions() []*Action {
 	return []*Action{}
 }
 
 // Command line argument parsing methods
 
-func (p *ArgumentParser) ParseArgs(args []any, namespace *namespace.Namespace) []any {
+func (ap *ArgumentParser) ParseArgs(args []any, namespace *namespace.Namespace) []any {
 	return []any{}
 }
 
-func (p *ArgumentParser) ParseKnownArgs(args []any, namespace *namespace.Namespace) []any {
+func (ap *ArgumentParser) ParseKnownArgs(args []any, namespace *namespace.Namespace) []any {
 	return []any{}
 }
 
-func (p *ArgumentParser) ParseKnownArgs2(args []any, namespace *namespace.Namespace, intermixed any) {
+func (ap *ArgumentParser) ParseKnownArgs2(args []any, namespace *namespace.Namespace, intermixed any) {
 
 }
 
-func (p *ArgumentParser) parseKnownArgs(args []any, namespace *namespace.Namespace, intermixed any) {
+func (ap *ArgumentParser) parseKnownArgs(args []any, namespace *namespace.Namespace, intermixed any) {
 
 }
 
-func (p *ArgumentParser) readArgsFromFiles(argString string) {
+func (ap *ArgumentParser) readArgsFromFiles(argString string) {
 
 }
 
-func (p *ArgumentParser) convertArgLineToArgs(argString string) []any {
+func (ap *ArgumentParser) convertArgLineToArgs(argString string) []any {
 	return []any{argString}
 }
 
-func (p *ArgumentParser) matchArgument(action *Action, argStringsPattern string) {
+func (ap *ArgumentParser) matchArgument(action *Action, argStringsPattern string) {
 }
 
-func (p *ArgumentParser) matchArgumentsPartial(action *Action, argStringsPattern string) {
+func (ap *ArgumentParser) matchArgumentsPartial(action *Action, argStringsPattern string) {
 }
 
-func (p *ArgumentParser) parseOptional(argString string) {
+func (ap *ArgumentParser) parseOptional(argString string) {
 }
 
-func (p *ArgumentParser) getOptionTuples(optionString string) {
+func (ap *ArgumentParser) getOptionTuples(optionString string) {
 }
 
-func (p *ArgumentParser) getNargsPattern(action *Action) {
+func (ap *ArgumentParser) getNargsPattern(action *Action) {
 }
 
 // Alt command line argument parsing, allowing free intermix
 
-func (p *ArgumentParser) ParseIntermixedArgs() {
+func (ap *ArgumentParser) ParseIntermixedArgs() {
 }
 
-func (p *ArgumentParser) ParseKnownIntermixedArgs() {
+func (ap *ArgumentParser) ParseKnownIntermixedArgs() {
 }
 
 // Value conversion methods
 
-func (p *ArgumentParser) GetValues() {
+func (ap *ArgumentParser) GetValues() {
 }
 
-func (p *ArgumentParser) GetValue() {
+func (ap *ArgumentParser) GetValue() {
 }
 
-func (p *ArgumentParser) CheckValue() {
+func (ap *ArgumentParser) CheckValue() {
 }
 
 // Help-formatting methods
 
-func (p *ArgumentParser) FormatUsage() string {
+func (ap *ArgumentParser) FormatUsage() string {
 	return "Usage: [options]: NOT IMPLEMENTED YET\n" // Example message, replace with actual implementation.
 }
 
 // FormatHelp generates and returns the formatted help message.
 // This is a placeholder and should be implemented as per your application's needs.
-func (p *ArgumentParser) FormatHelp() string {
+func (ap *ArgumentParser) FormatHelp() string {
 	return "Usage: [options]: NOT IMPLEMENTED YET\n" // Example message, replace with actual implementation.
 }
 
-func (p *ArgumentParser) getFormatter() {
+func (ap *ArgumentParser) getFormatter() {
 
 }
 
 // Help-printing methods
 
-func (p *ArgumentParser) PrintUsage() {
+func (ap *ArgumentParser) PrintUsage() {
 
 }
 
 // PrintHelp prints the help message to the provided file or stdout if no file is specified.
-func (p *ArgumentParser) PrintHelp(file *os.File) {
+func (ap *ArgumentParser) PrintHelp(file *os.File) {
 	if file == nil {
 		file = os.Stdout
 	}
-	p.printMessage(p.FormatHelp(), file)
+	ap.printMessage(ap.FormatHelp(), file)
 }
 
-// func (p *ArgumentParser) CheckHelp(action any) error {
+// func (ap *ArgumentParser) CheckHelp(action any) error {
 // 	return nil
 // }
 
 // printMessage prints the given message to the specified file or stderr if no file is provided.
-func (p *ArgumentParser) printMessage(message string, file *os.File) {
+func (ap *ArgumentParser) printMessage(message string, file *os.File) {
 	if message != "" {
 		if file == nil {
 			file = os.Stderr
@@ -152,19 +152,19 @@ func (p *ArgumentParser) printMessage(message string, file *os.File) {
 // Exiting methods
 
 // Exit prints a message to stderr (if provided) and exits with the given status.
-func (p *ArgumentParser) Exit(status int, message string) {
+func (ap *ArgumentParser) Exit(status int, message string) {
 
 	if message != "" {
-		p.printMessage(message, os.Stderr)
+		ap.printMessage(message, os.Stderr)
 	}
 
 	os.Exit(status)
 }
 
-func (p *ArgumentParser) Error(message string) {
+func (ap *ArgumentParser) Error(message string) {
 
 }
 
-func (p *ArgumentParser) warning(message string) {
+func (ap *ArgumentParser) warning(message string) {
 
 }
