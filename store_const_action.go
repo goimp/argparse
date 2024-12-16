@@ -29,6 +29,6 @@ func NewStoreConstAction(optionStrings []string, dest string, constVal any, defa
 }
 
 // Call assigns the provided values to the destination field in the namespace.
-func (a *StoreConstAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
+func (a *StoreConstAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
 	namespace.Set(a.Dest, a.Const)
 }

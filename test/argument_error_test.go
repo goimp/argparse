@@ -1,4 +1,4 @@
-package argument_parser
+package argparse_test
 
 import (
 	"argparse"
@@ -10,14 +10,14 @@ func TestArgumentError(t *testing.T) {
 	arg := &argparse.Action{
 		OptionStrings: []string{"--test"},
 	}
-	err := NewArgumentError(arg, "invalid option")
+	err := argparse.NewArgumentError(arg, "invalid option")
 	expected := "argument --test: invalid option"
 	if err.Error() != expected {
 		t.Errorf("expected %q, got %q", expected, err.Error())
 	}
 
 	// Test with no argument
-	err = NewArgumentError(nil, "missing argument")
+	err = argparse.NewArgumentError(nil, "missing argument")
 	expected = "missing argument"
 	if err.Error() != expected {
 		t.Errorf("expected %q, got %q", expected, err.Error())
@@ -27,7 +27,7 @@ func TestArgumentError(t *testing.T) {
 	arg = &argparse.Action{
 		Metavar: "FILE",
 	}
-	err = NewArgumentError(arg, "file not found")
+	err = argparse.NewArgumentError(arg, "file not found")
 	expected = "argument FILE: file not found"
 	if err.Error() != expected {
 		t.Errorf("expected %q, got %q", expected, err.Error())
@@ -35,7 +35,7 @@ func TestArgumentError(t *testing.T) {
 }
 
 func TestArgumentTypeError(t *testing.T) {
-	err := NewArgumentTypeError("failed to convert type")
+	err := argparse.NewArgumentTypeError("failed to convert type")
 	expected := "failed to convert type"
 	if err.Error() != expected {
 		t.Errorf("expected %q, got %q", expected, err.Error())

@@ -31,7 +31,7 @@ func NewCountAction(
 	}, nil
 }
 
-func (a *CountAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
+func (a *CountAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
 	count, found := namespace.Get(a.Dest)
 	if !found || count == nil {
 		count = 0

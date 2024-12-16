@@ -43,9 +43,9 @@ func NewHelpAction(
 }
 
 // SetValue prints the help message and exits the program.
-func (a *HelpAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
-	// if parser != nil {
-	// 	parser.PrintHelp(nil)
-	// 	parser.Exit(0, "")
-	// }
+func (a *HelpAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
+	if parser != nil {
+		parser.PrintHelp(nil)
+		parser.Exit(0, "")
+	}
 }

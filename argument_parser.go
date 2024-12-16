@@ -1,4 +1,4 @@
-package argument_parser
+package argparse
 
 import (
 	"os"

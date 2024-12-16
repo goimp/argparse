@@ -46,12 +46,12 @@ func NewExtendAction(
 }
 
 // SetValue prints the version information and exits the program.
-func (a *ExtendAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
+func (a *ExtendAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values []any, optionString string) {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}
 	}
 	items = copy_items.CopyItems(items)
-	items = append(items.([]any), values)
+	items = append(items.([]any), values...)
 	namespace.Set(a.Dest, items)
 }

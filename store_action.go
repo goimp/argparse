@@ -47,6 +47,6 @@ func NewStoreAction(optionStrings []string, dest string, nargs any, constVal any
 }
 
 // Call assigns the provided values to the destination field in the namespace.
-func (a *StoreAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
+func (a *StoreAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
 	namespace.Set(a.Dest, values)
 }

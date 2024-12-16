@@ -1,7 +1,6 @@
-package argument_parser
+package argparse
 
 import (
-	"argparse"
 	"fmt"
 )
 
@@ -12,9 +11,9 @@ type ArgumentError struct {
 }
 
 // NewArgumentError creates a new ArgumentError with a formatted message.
-func NewArgumentError(argument *argparse.Action, message string) *ArgumentError {
+func NewArgumentError(argument *Action, message string) *ArgumentError {
 	return &ArgumentError{
-		ArgumentName: argparse.GetActionName(argument),
+		ArgumentName: GetActionName(argument),
 		Message:      message,
 	}
 }

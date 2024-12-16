@@ -139,7 +139,7 @@ func (p *SubParsersAction) GetSubactions() []*ChoicesPseudoAction {
 	return p.ChoicesActions
 }
 
-func (p *SubParsersAction) Call(parser any, namespace namespace.Namespace, values []any, optionString string) {
+func (p *SubParsersAction) Call(parser *ArgumentParser, namespace namespace.Namespace, values []any, optionString string) {
 	parserName := values[0].(string)
 	argStrings := values[1:]
 

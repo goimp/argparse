@@ -2,14 +2,13 @@ package argparse_test
 
 import (
 	"argparse"
-	"argparse/argument_parser"
 	"fmt"
 	"testing"
 )
 
 func TestHelpAction(t *testing.T) {
 
-	p := &argument_parser.ArgumentParser{}
+	p := &argparse.ArgumentParser{}
 
 	a, err := argparse.NewHelpAction(
 		[]string{"-h", "--help"},
