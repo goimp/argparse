@@ -1,20 +1,26 @@
-package action_test
+package argparse_test
 
 import (
-	"argparse/action"
+	"argparse"
 	"argparse/namespace"
 	"fmt"
+	"reflect"
 	"testing"
 )
 
-func TestStoreConstAction(t *testing.T) {
+func TestAppendAction(t *testing.T) {
 
-	n := namespace.NewNamespace(map[string]any{})
+	n := namespace.NewNamespace(map[string]any{
+		"foo": []any{1, 2},
+	})
 
-	a, err := action.NewStoreConstAction(
+	a, err := argparse.NewAppendAction(
 		[]string{"-f", "--foo"},
 		"foo",
-		"bar",
+		argparse.OPTIONAL,
+		nil,
+		nil,
+		nil,
 		nil,
 		false,
 		"Enable verbose output",
@@ -23,18 +29,21 @@ func TestStoreConstAction(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Errorf("StoreConstAction creation error: %s", err)
+		t.Errorf("AppendAction creation error: %s", err)
 	}
 
 	fmt.Printf("Kwargs: %v\n", a.GetKwargs())
 
 	a.Call(nil, n, []any{1, 2, 3}, "")
 
+	referenceValue := []any{1, 2, []any{1, 2, 3}}
+
 	if value, found := n.Get("foo"); !found {
 		t.Errorf("Not found attribute %s in namespace\n", a.Dest)
 	} else {
-		if value != a.Const {
-			t.Errorf("Action value error, expected %v, got %v\n", a.Const, value)
+		// Use reflect.DeepEqual to compare the values
+		if !reflect.DeepEqual(value, referenceValue) {
+			t.Errorf("Wrong value got, expected %v, got %v\n", referenceValue, value)
 		} else {
 			fmt.Printf("%s: %v\n", a.Dest, value)
 		}

@@ -1,7 +1,6 @@
-package action
+package argparse
 
 import (
-	"argparse"
 	"argparse/namespace"
 	"fmt"
 	"strings"
@@ -57,7 +56,7 @@ func NewSubParsersAction(
 		Action: Action{
 			OptionStrings: optionStrings,
 			Dest:          dest,
-			Nargs:         argparse.PARSER,
+			Nargs:         PARSER,
 			Required:      required,
 			Help:          help,
 			Metavar:       metavar,
@@ -145,7 +144,7 @@ func (p *SubParsersAction) Call(parser any, namespace namespace.Namespace, value
 	argStrings := values[1:]
 
 	// set the parser name if requested
-	if p.Dest != argparse.SUPPRESS {
+	if p.Dest != SUPPRESS {
 		namespace.Set(p.Dest, parserName)
 	}
 
@@ -178,14 +177,14 @@ func (p *SubParsersAction) Call(parser any, namespace namespace.Namespace, value
 	// }
 
 	if argStrings != nil {
-		if unrec, exist := namespace.Get(argparse.UNRECOGNIZED_ARGS_ATTR); !exist {
-			namespace.Set(argparse.UNRECOGNIZED_ARGS_ATTR, make(map[string]any))
+		if unrec, exist := namespace.Get(UNRECOGNIZED_ARGS_ATTR); !exist {
+			namespace.Set(UNRECOGNIZED_ARGS_ATTR, make(map[string]any))
 		} else {
 			switch t := unrec.(type) {
 			case []any:
 				newUnrec := unrec.([]any)
 				newUnrec = append(newUnrec, argStrings)
-				namespace.Set(argparse.UNRECOGNIZED_ARGS_ATTR, newUnrec)
+				namespace.Set(UNRECOGNIZED_ARGS_ATTR, newUnrec)
 			default:
 				fmt.Printf("Wrong unrec type %v\n", t)
 			}

@@ -1,7 +1,6 @@
-package action
+package argparse
 
 import (
-	"argparse"
 	"argparse/copy_items"
 	"argparse/namespace"
 	"fmt"
@@ -35,13 +34,13 @@ func NewAppendAction(
 			)
 		}
 	case string:
-		if constVal != nil && v != argparse.OPTIONAL {
-			return nil, fmt.Errorf("nargs must %s to supply const", argparse.OPTIONAL)
+		if constVal != nil && v != OPTIONAL {
+			return nil, fmt.Errorf("nargs must %s to supply const", OPTIONAL)
 		}
 	case nil:
 		break
 	default:
-		return nil, fmt.Errorf("nargs must be an integer or a string literal (e.g., %s)", argparse.OPTIONAL)
+		return nil, fmt.Errorf("nargs must be an integer or a string literal (e.g., %s)", OPTIONAL)
 	}
 
 	return &AppendAction{

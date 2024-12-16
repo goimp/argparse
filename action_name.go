@@ -1,7 +1,6 @@
-package action
+package argparse
 
 import (
-	"argparse"
 	"fmt"
 	"strings"
 )
@@ -18,19 +17,19 @@ func GetActionName(argument *Action) string {
 	}
 
 	// If metavar is present
-	if metavar, ok := argument.Metavar.(string); ok && metavar != argparse.SUPPRESS {
+	if metavar, ok := argument.Metavar.(string); ok && metavar != SUPPRESS {
 		return metavar
 	} else if metavar, ok := argument.Metavar.([]string); ok {
-		if argument.Nargs == argparse.ZERO_OR_MORE && len(metavar) == 2 {
+		if argument.Nargs == ZERO_OR_MORE && len(metavar) == 2 {
 			return fmt.Sprintf("%s[, %s]", metavar[0], metavar[1])
-		} else if argument.Nargs == argparse.ONE_OR_MORE {
+		} else if argument.Nargs == ONE_OR_MORE {
 			return fmt.Sprintf("%s[, %s]", metavar[0], metavar[1])
 		}
 		return strings.Join(metavar, ", ")
 	}
 
 	// If destination is present
-	if argument.Dest != "" && argument.Dest != argparse.SUPPRESS {
+	if argument.Dest != "" && argument.Dest != SUPPRESS {
 		return argument.Dest
 	}
 

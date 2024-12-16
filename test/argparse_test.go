@@ -2,6 +2,7 @@ package argparse
 
 import (
 	"testing"
+	"argparse"
 )
 
 // TestGreet tests the Greet function.
@@ -18,7 +19,7 @@ func TestGreet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := Greet(tt.input)
+			got := argparse.Greet(tt.input)
 			if got != tt.expected {
 				t.Errorf("Greet(%q) = %q; want %q", tt.input, got, tt.expected)
 			}

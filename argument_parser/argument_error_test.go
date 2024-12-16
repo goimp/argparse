@@ -1,13 +1,13 @@
 package argument_parser
 
 import (
-	"argparse/action"
+	"argparse"
 	"testing"
 )
 
 func TestArgumentError(t *testing.T) {
 	// Test with valid argument
-	arg := &action.Action{
+	arg := &argparse.Action{
 		OptionStrings: []string{"--test"},
 	}
 	err := NewArgumentError(arg, "invalid option")
@@ -24,7 +24,7 @@ func TestArgumentError(t *testing.T) {
 	}
 
 	// Test with metavar
-	arg = &action.Action{
+	arg = &argparse.Action{
 		Metavar: "FILE",
 	}
 	err = NewArgumentError(arg, "file not found")

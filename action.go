@@ -1,4 +1,4 @@
-package action
+package argparse
 
 import (
 	"argparse/attribute_holder" // Import the AttributeHolder package
@@ -21,7 +21,7 @@ type Action struct {
 	Choices       []any    // The valid values for this argument
 	Required      bool     // Whether the argument is required
 	Help          string   // The help description for the argument
-	Metavar       any   // The name to be used in help output
+	Metavar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
 }
 

@@ -1,7 +1,6 @@
-package action
+package argparse
 
 import (
-	"argparse"
 	"argparse/namespace"
 	"fmt"
 )
@@ -21,13 +20,13 @@ func NewStoreAction(optionStrings []string, dest string, nargs any, constVal any
 			return nil, fmt.Errorf("nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate")
 		}
 	case string:
-		if constVal != nil && v != argparse.OPTIONAL {
-			return nil, fmt.Errorf("nargs must %s to supply const", argparse.OPTIONAL)
+		if constVal != nil && v != OPTIONAL {
+			return nil, fmt.Errorf("nargs must %s to supply const", OPTIONAL)
 		}
 	case nil:
 		break
 	default:
-		return nil, fmt.Errorf("nargs must be an integer or a string literal (e.g., %s)", argparse.OPTIONAL)
+		return nil, fmt.Errorf("nargs must be an integer or a string literal (e.g., %s)", OPTIONAL)
 	}
 
 	action := Action{

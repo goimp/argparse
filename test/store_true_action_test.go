@@ -1,27 +1,27 @@
-package action_test
+package argparse_test
 
 import (
-	"argparse/action"
+	"argparse"
 	"argparse/namespace"
 	"fmt"
 	"testing"
 )
 
-func TestStoreFalseAction(t *testing.T) {
+func TestStoreTrueAction(t *testing.T) {
 
 	n := namespace.NewNamespace(map[string]any{})
 
-	a, err := action.NewStoreFalseAction(
+	a, err := argparse.NewStoreTrueAction(
 		[]string{"-f", "--foo"},
 		"foo",
-		true,
+		false,
 		false,
 		"Enable verbose output",
 		false,
 	)
 
 	if err != nil {
-		t.Errorf("StoreFalseAction creation error: %s", err)
+		t.Errorf("StoreTrueAction creation error: %s", err)
 	}
 
 	fmt.Printf("Kwargs: %v\n", a.GetKwargs())

@@ -1,7 +1,6 @@
-package action
+package argparse
 
 import (
-	"argparse"
 	"argparse/namespace"
 )
 
@@ -22,12 +21,12 @@ func NewHelpAction(
 
 	// Default dest to SUPPRESS if empty
 	if dest == "" {
-		dest = argparse.SUPPRESS
+		dest = SUPPRESS
 	}
 
 	// Default defaultVal to SUPPRESS if nil
 	if defaultVal == nil {
-		defaultVal = argparse.SUPPRESS
+		defaultVal = SUPPRESS
 	}
 
 	// Create and return the HelpAction instance

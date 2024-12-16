@@ -1,12 +1,12 @@
-package action_test
+package argparse_test
 
 import (
-	"argparse/action"
+	"argparse"
 	"testing"
 )
 
 func TestAction(t *testing.T) {
-	action := &action.Action{
+	action := &argparse.Action{
 		OptionStrings: []string{"--verbose"},
 		Dest:          "verbose",
 		Nargs:         1,

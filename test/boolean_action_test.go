@@ -1,7 +1,7 @@
-package action_test
+package argparse_test
 
 import (
-	"argparse/action"
+	"argparse"
 	"argparse/namespace"
 	"fmt"
 	"testing"
@@ -11,7 +11,7 @@ func TestBooleanAction(t *testing.T) {
 
 	n := namespace.NewNamespace(map[string]any{})
 
-	a, err := action.NewBooleanOptionalAction(
+	a, err := argparse.NewBooleanOptionalAction(
 		[]string{"-v", "--verbose"},
 		"verbose",
 		nil,

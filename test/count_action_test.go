@@ -1,39 +1,37 @@
-package action_test
+package argparse_test
 
 import (
-	"argparse/action"
+	"argparse"
 	"argparse/namespace"
 	"fmt"
 	"reflect"
 	"testing"
 )
 
-func TestAppendConstAction(t *testing.T) {
+func TestCountAction(t *testing.T) {
 
 	n := namespace.NewNamespace(map[string]any{
-		"foo": []any{"bar"},
+		// "foo": 1,
 	})
 
-	a, err := action.NewAppendConstAction(
+	a, err := argparse.NewCountAction(
 		[]string{"-f", "--foo"},
 		"foo",
-		"baz",
-		nil,
+		0,
 		false,
 		"Enable verbose output",
-		"",
 		false,
 	)
 
 	if err != nil {
-		t.Errorf("AppendConstAction creation error: %s", err)
+		t.Errorf("CountAction creation error: %s", err)
 	}
 
 	fmt.Printf("Kwargs: %v\n", a.GetKwargs())
 
-	a.Call(nil, n, "baz", "")
+	a.Call(nil, n, 5, "")
 
-	referenceValue := []any{"bar", "baz"}
+	referenceValue := 1
 
 	if value, found := n.Get("foo"); !found {
 		t.Errorf("Not found attribute %s in namespace\n", a.Dest)
