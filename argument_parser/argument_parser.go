@@ -8,6 +8,12 @@ type ArgumentParser struct {
 	// Additional fields can be added as needed.
 }
 
+type NewArgumentParserFunc = func(kwargs map[string]any) (*ArgumentParser, error)
+
+func NewArgumentParser(kwargs map[string]any) (*ArgumentParser, error) {
+	return &ArgumentParser{}, nil
+}
+
 // PrintHelp prints the help message to the provided file or stdout if no file is specified.
 func (p *ArgumentParser) PrintHelp(file *os.File) {
 	if file == nil {
@@ -44,4 +50,8 @@ func (p *ArgumentParser) Exit(status int, message string) {
 // This is a placeholder and should be implemented as per your application's needs.
 func (p *ArgumentParser) FormatHelp() string {
 	return "Usage: [options]: NOT IMPLEMENTED YET\n" // Example message, replace with actual implementation.
+}
+
+func (p *ArgumentParser) CheckHelp(action any) error {
+	return nil
 }

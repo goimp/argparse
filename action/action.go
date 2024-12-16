@@ -5,23 +5,24 @@ import (
 	"argparse/namespace"        // Import the AttributeHolder package
 )
 
-type StringToAnyFunc func(string) (any, error)
+type Type = any
+type TypeFunc = func(string) (any, error)
 
 // Action represents the action associated with an argument.
 type Action struct {
 	attribute_holder.AttributeHolder // Embedding AttributeHolder for its functionality
 
-	OptionStrings []string        // The command-line option strings
-	Dest          string          // The destination name where the value will be stored
-	Nargs         any             // The number of arguments to consume
-	Const         any             // The constant value for certain actions
-	Default       any             // The default value if the option is not specified
-	Type          StringToAnyFunc // The function to convert the string to the appropriate type
-	Choices       []any           // The valid values for this argument
-	Required      bool            // Whether the argument is required
-	Help          string          // The help description for the argument
-	Metavar       string          // The name to be used in help output
-	Deprecated    bool            // Whether the argument is deprecated
+	OptionStrings []string // The command-line option strings
+	Dest          string   // The destination name where the value will be stored
+	Nargs         any      // The number of arguments to consume
+	Const         any      // The constant value for certain actions
+	Default       any      // The default value if the option is not specified
+	Type          Type     // The function to convert the string to the appropriate type
+	Choices       []any    // The valid values for this argument
+	Required      bool     // Whether the argument is required
+	Help          string   // The help description for the argument
+	Metavar       any   // The name to be used in help output
+	Deprecated    bool     // Whether the argument is deprecated
 }
 
 func NewAction(
@@ -30,7 +31,7 @@ func NewAction(
 	nargs any,
 	constVal any,
 	defaultVal any,
-	typ StringToAnyFunc,
+	typ Type,
 	choices []any,
 	required bool,
 	help string,

@@ -13,7 +13,7 @@ type StoreAction struct {
 
 // NewStoreAction creates a new StoreAction object.
 func NewStoreAction(optionStrings []string, dest string, nargs any, constVal any, defaultVal any,
-	typ StringToAnyFunc, choices []any, required bool, help, metavar string, deprecated bool) (*StoreAction, error) {
+	typ Type, choices []any, required bool, help, metavar string, deprecated bool) (*StoreAction, error) {
 
 	switch v := nargs.(type) {
 	case int:

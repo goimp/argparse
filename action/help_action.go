@@ -2,7 +2,6 @@ package action
 
 import (
 	"argparse"
-	"argparse/argument_parser"
 	"argparse/namespace"
 )
 
@@ -45,9 +44,9 @@ func NewHelpAction(
 }
 
 // SetValue prints the help message and exits the program.
-func (a *HelpAction) Call(parser *argument_parser.ArgumentParser, namespace *namespace.Namespace, values any, option_string string) {
-	if parser != nil {
-		parser.PrintHelp(nil)
-		parser.Exit(0, "")
-	}
+func (a *HelpAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
+	// if parser != nil {
+	// 	parser.PrintHelp(nil)
+	// 	parser.Exit(0, "")
+	// }
 }

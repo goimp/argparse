@@ -36,7 +36,7 @@ func NewAppendConstAction(
 	}, nil
 }
 
-func (a *AppendConstAction) Call(parser any, namespace *namespace.Namespace, values any, option_string string) {
+func (a *AppendConstAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}

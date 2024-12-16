@@ -19,7 +19,7 @@ func NewAppendAction(
 	nargs any,
 	constVal any,
 	defaultVal any,
-	typ StringToAnyFunc,
+	typ Type,
 	choices []any,
 	required bool,
 	help string,
@@ -61,12 +61,12 @@ func NewAppendAction(
 	}, nil
 }
 
-func (a *AppendAction) Call(parser any, namespace *namespace.Namespace, values any, option_string string) {
+func (a *AppendAction) Call(parser any, namespace *namespace.Namespace, values []any, optionString string) {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}
 	}
 	items = copy_items.CopyItems(items)
-	items = append(items.([]any), values)
+	items = append(items.([]any), values...)
 	namespace.Set(a.Dest, items)
 }
