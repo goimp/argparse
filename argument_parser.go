@@ -6,8 +6,8 @@ import (
 )
 
 type ArgumentParser struct {
-	attribute_holder.AttributeHolder
-	ActionsContainer
+	*attribute_holder.AttributeHolder
+	*ActionsContainer
 }
 
 type NewArgumentParserFunc = func(kwargs map[string]any) (*ArgumentParser, error)
@@ -164,6 +164,6 @@ func (ap *ArgumentParser) Error(message string) {
 
 }
 
-func (ap *ArgumentParser) warning(message string) {
+func (ap *ArgumentParser) Warning(message string) {
 
 }

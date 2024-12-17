@@ -26,6 +26,17 @@ func NewAppendConstAction(argument *Argument) ActionInterface {
 	}
 }
 
+// func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
+// 	items, found := namespace.Get(a.Dest)
+// 	if !found {
+// 		items = []any{}
+// 	}
+// 	items = copy_items.CopyItems(items)
+// 	items = append(items.([]any), a.Const)
+// 	namespace.Set(a.Dest, items)
+// 	return nil
+// }
+
 func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	items, found := namespace.Get(a.Dest)
 	if !found {

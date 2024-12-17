@@ -31,7 +31,8 @@ type Action struct {
 	Metavar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
 
-	container any
+	Container    ActionsContainerInterface
+	GetFormatter any
 }
 
 func NewAction(argument *Argument) *Action {

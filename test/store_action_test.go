@@ -10,7 +10,7 @@ func TestStoreAction(t *testing.T) {
 
 	n := argparse.NewNamespace(map[string]any{})
 
-	a := argparse.NewStoreAction(
+	ai := argparse.NewStoreAction(
 		&argparse.Argument{
 			OptionStrings: []string{"-f", "--foo"},
 			Dest:          "foo",
@@ -20,11 +20,12 @@ func TestStoreAction(t *testing.T) {
 		},
 	)
 
-	fmt.Printf("Kwargs: %v\n", a.GetMap())
+	fmt.Println("TestStoreConstAction:")
+	prettyPrintMap(ai.GetMap())
 
-	a.Call(nil, n, []any{1, 2, 3}, "")
+	ai.Call(nil, n, []any{1, 2, 3}, "")
 
-	action := a.Struct()
+	action := ai.Struct()
 
 	if value, found := n.Get("foo"); !found {
 		t.Errorf("Not found attribute %s in namespace\n", action.Dest)
@@ -32,7 +33,7 @@ func TestStoreAction(t *testing.T) {
 		fmt.Printf("%s: %v\n", action.Dest, value)
 	}
 
-	if f := a.FormatUsage(); !(f == "-f") {
+	if f := ai.FormatUsage(); !(f == "-f") {
 		t.Errorf("Not found attribute %s in namespace\n", action.Dest)
 	} else {
 		fmt.Printf("Format usage: %s\n", f)

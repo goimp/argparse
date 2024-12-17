@@ -49,6 +49,7 @@ func TestActionsContainer(t *testing.T) {
 		&argparse.Argument{
 			OptionStrings: []string{"-f", "--foo"},
 			Action:        "store",
+			Dest:          "store",
 		},
 	)
 
@@ -137,8 +138,30 @@ func TestActionsContainer(t *testing.T) {
 		},
 	)
 
+	container.Struct().SetDefaults(
+		map[string]any{
+			"default": "<Default value for store>",
+		},
+	)
+
+	defAct := container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"--def"},
+			Dest:          "default",
+			Action:        "store",
+			Nargs:         1,
+		},
+	)
+
 	for _, actIntf := range container.(*argparse.ActionsContainer).Actions {
 		fmt.Println(reflect.TypeOf(actIntf))
 		prettyPrintMap(actIntf.GetMap())
 	}
+
+	if container.Struct().GetDefault("default").(string) != "<Default value for store>" {
+		t.Errorf("Wrong default value")
+	}
+
+	container.Struct().RemoveAction(defAct)
+
 }

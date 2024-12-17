@@ -14,12 +14,13 @@ func NewArgumentGroup(
 	container *ActionsContainer,
 	title string,
 	description string,
-	kwargs map[string]any,
+	prefixChars string,
+	conflictHandler any,
 	groupActions []ActionInterface,
 ) ActionsContainerInterface {
 
-	if _, exist := kwargs["prefixChars"]; exist {
-		fmt.Println("The use of the undocumented 'prefix_chars' parameter in ArgumentParser.AddArgumentGroup() is deprecated.")
+	if prefixChars != "" {
+		fmt.Println("The use of the undocumented 'prefixChars' parameter in ArgumentParser.AddArgumentGroup() is deprecated.")
 	}
 
 	// kwargs["conflictHandler"] = container.ConflictHandler
@@ -39,12 +40,12 @@ func NewArgumentGroup(
 		GroupActions:     []ActionInterface{},
 	}
 
-	group.registries = container.registries
+	group.Registries = container.Registries
 	group.Actions = container.Actions
-	group.optionStringActions = container.optionStringActions
-	group.defaults = container.defaults
-	group.hasNegativeNumberOptionals = container.hasNegativeNumberOptionals
-	group.mutuallyExclusiveGroups = container.mutuallyExclusiveGroups
+	group.OptionStringActions = container.OptionStringActions
+	group.Defaults = container.Defaults
+	group.HasNegativeNumberOptionals = container.HasNegativeNumberOptionals
+	group.MutuallyExclusiveGroups = container.MutuallyExclusiveGroups
 
 	return group
 }
@@ -55,18 +56,19 @@ func (ag *ArgumentGroup) AddAction(action ActionInterface) ActionInterface {
 	return act
 }
 
-func (ag *ArgumentGroup) RemoveAction(dest string) error {
-	for i, actionInterface := range ag.Actions {
-		action := actionInterface.Struct()
-		if action.Dest == dest {
-			// Remove the action by appending slices before and after the index
-			ag.Actions = append(ag.Actions[:i], ag.Actions[i+1:]...)
-			return nil // Action removed successfully
+func (ac *ArgumentGroup) RemoveAction(action ActionInterface) {
+	for i, v := range ac.Actions {
+		if v == action {
+			// Remove the item by slicing the array
+			ac.Actions = append(ac.Actions[:i], ac.Actions[i+1:]...)
 		}
 	}
-	return fmt.Errorf("action with dest %q not found", dest)
 }
 
-func (ag *ArgumentGroup) AddArgumentGroup(args []any, kwargs map[string]any) ActionsContainerInterface {
+func (ag *ArgumentGroup) AddArgumentGroup(argumentGroup ActionsContainerInterface) ActionsContainerInterface {
 	panic("argument group can not be nested")
+}
+
+func (a *ArgumentGroup) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup ActionsContainerInterface) ActionsContainerInterface {
+	panic("mutually exclusive groups cannot be nested")
 }

@@ -9,10 +9,30 @@ import (
 type Registry = map[any]any
 type Registries = map[string]Registry
 
+type ConflictingOption struct {
+	OptionString   string
+	ConflictAction ActionInterface
+}
+
 type ActionsContainerInterface interface {
-	AddMutuallyExclusiveGroup(*MutuallyExclusiveGroup) ActionsContainerInterface
-	AddArgument(*Argument) ActionInterface
-	AddAction(ActionInterface) ActionInterface
+	Struct() *ActionsContainer                                                     // +
+	Register(string, any, any)                                                     // +
+	RegistryGet(string, any, any) any                                              // +
+	AddArgument(*Argument) ActionInterface                                         // ?
+	SetDefaults(map[string]any)                                                    // +
+	GetDefault(string) any                                                         // +
+	AddArgumentGroup(ActionsContainerInterface) ActionsContainerInterface          // ?
+	AddMutuallyExclusiveGroup(ActionsContainerInterface) ActionsContainerInterface // ?
+	AddAction(ActionInterface) ActionInterface                                     // ?
+	RemoveAction(ActionInterface)                                                  // ?
+	AddContainerAction(ActionsContainerInterface)                                  // ?
+	GetPositionalArgument(*Argument) *Argument                                     // +
+	GetOptionalArgument(*Argument) *Argument                                       // +
+	GetHandler() func(ActionInterface, []ConflictingOption)                        // -
+	CheckConflict(ActionInterface)                                                 // ?
+	HandleConflictError(ActionInterface, []ConflictingOption)                      // ?
+	HandleConflictResolve(ActionInterface, []ConflictingOption)                    // ?
+	CheckHelp(action ActionInterface)                                              // ?
 }
 
 type ActionsContainer struct {
@@ -20,18 +40,22 @@ type ActionsContainer struct {
 	PrefixChars                string
 	ArgumentDefault            any
 	ConflictHandler            any
-	registries                 Registries
+	Registries                 Registries
 	Actions                    []ActionInterface
-	optionStringActions        map[string]any
-	actionGroups               []*ArgumentGroup
-	mutuallyExclusiveGroups    []*MutuallyExclusiveGroup
-	defaults                   map[string]any
-	negativeNumberMatcher      *regexp.Regexp
-	hasNegativeNumberOptionals []bool
+	OptionStringActions        map[string]ActionInterface
+	ActionGroups               []ActionsContainerInterface
+	MutuallyExclusiveGroups    []ActionsContainerInterface
+	Defaults                   map[string]any
+	NegativeNumberMatcher      *regexp.Regexp
+	HasNegativeNumberOptionals []bool
 
-	getFormatter any
+	GetFormatter any
 	Title        string
 	Required     bool
+}
+
+func (ac *ActionsContainer) Struct() *ActionsContainer {
+	return ac
 }
 
 func NewActionsContainer(
@@ -46,14 +70,14 @@ func NewActionsContainer(
 		PrefixChars:                prefixChars,
 		ArgumentDefault:            argumentDefault,
 		ConflictHandler:            conflictHandler,
-		registries:                 make(Registries),    // set up registries
+		Registries:                 make(Registries),    // set up registries
 		Actions:                    []ActionInterface{}, // action storage
-		optionStringActions:        make(map[string]any),
-		actionGroups:               []*ArgumentGroup{}, // groups
-		mutuallyExclusiveGroups:    []*MutuallyExclusiveGroup{},
-		defaults:                   make(map[string]any),            // defaults storage
-		negativeNumberMatcher:      regexp.MustCompile(`-\.?(\d+)`), // determines whether an "option" looks like a negative number
-		hasNegativeNumberOptionals: []bool{},                        // # whether or not there are any optionals that look like negative numbers -- uses a list so it can be shared and edited
+		OptionStringActions:        make(map[string]ActionInterface),
+		ActionGroups:               []ActionsContainerInterface{}, // groups
+		MutuallyExclusiveGroups:    []ActionsContainerInterface{},
+		Defaults:                   make(map[string]any),            // defaults storage
+		NegativeNumberMatcher:      regexp.MustCompile(`-\.?(\d+)`), // determines whether an "option" looks like a negative number
+		HasNegativeNumberOptionals: []bool{},                        // # whether or not there are any optionals that look like negative numbers -- uses a list so it can be shared and edited
 	}
 
 	// register actions
@@ -83,10 +107,10 @@ func NewActionsContainer(
 // Register method to add a value to the registry in ActionsContainer
 func (ac *ActionsContainer) Register(registryName string, value any, object any) {
 	// Set default registry if it doesn't exist
-	registry, exists := ac.registries[registryName]
+	registry, exists := ac.Registries[registryName]
 	if !exists {
 		registry = make(Registry)
-		ac.registries[registryName] = registry
+		ac.Registries[registryName] = registry
 	}
 
 	// Add the value-object pair to the registry
@@ -96,7 +120,7 @@ func (ac *ActionsContainer) Register(registryName string, value any, object any)
 // _RegistryGet method to retrieve a value from a registry with a default
 func (ac *ActionsContainer) RegistryGet(registryName string, value any, defaultVal any) any {
 	// Retrieve the registry by name
-	registry, exists := ac.registries[registryName]
+	registry, exists := ac.Registries[registryName]
 	if !exists {
 		return defaultVal // Return default value if registry doesn't exist
 	}
@@ -113,16 +137,16 @@ func (ac *ActionsContainer) RegistryGet(registryName string, value any, defaultV
 // Namespace default accessor methods
 
 // SetDefaults updates the default values and the action defaults
-func (ac *ActionsContainer) SetDefaults(kwargs map[string]any) {
+func (ac *ActionsContainer) SetDefaults(mapping map[string]any) {
 	// Update the _defaults map
-	for key, value := range kwargs {
-		ac.defaults[key] = value
+	for key, value := range mapping {
+		ac.Defaults[key] = value
 	}
 
-	// Update the default value of actions that match the keys in kwargs
+	// Update the default value of actions that match the keys in mapping
 	for _, actionInterface := range ac.Actions {
 		action := actionInterface.Struct()
-		if defaultValue, exists := kwargs[action.Dest]; exists {
+		if defaultValue, exists := mapping[action.Dest]; exists {
 			action.Default = defaultValue
 		}
 	}
@@ -137,7 +161,7 @@ func (ac *ActionsContainer) GetDefault(dest string) any {
 		}
 	}
 	// Return the default from the _defaults map if it exists
-	return ac.defaults[dest]
+	return ac.Defaults[dest]
 }
 
 func isArgInChars(value string, chars string) bool {
@@ -159,17 +183,17 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 		if argument.Dest != "" {
 			panic("Dest supplied twice for positional argument, did you mean Metavar")
 		}
-		argument = ac.getPositionalArgument(argument)
+		argument = ac.GetPositionalArgument(argument)
 	} else {
 		// Handle optional arguments
-		argument = ac.getOptionalArgument(argument)
+		argument = ac.GetOptionalArgument(argument)
 	}
 
 	// if no default was supplied, use the parser-level default
 	if argument.Default == nil {
 		dest := argument.Dest
-		if _, exist := ac.defaults[dest]; exist {
-			argument.Default = ac.defaults[dest]
+		if _, exist := ac.Defaults[dest]; exist {
+			argument.Default = ac.Defaults[dest]
 		} else if ac.ArgumentDefault != nil {
 			argument.Default = ac.ArgumentDefault
 		}
@@ -208,16 +232,288 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 	// }
 
 	// FIXME: not done
-	// // raise an error if the metavar does not match the type
-	// if ac.getFormatter != nil {
-	// 	formatter := ac.getFormatter.(FormatterFunc)()
-	// 	if err := formatter.formatArgs(action, nil); err {
+	// raise an error if the metavar does not match the type
+	// if ac.GetFormatter != nil {
+	// 	formatter := ac.GetFormatter.(FormatterFunc)()
+	// 	if err := formatter.FormatArgs(action, nil); err {
 	// 		panic("length of metavar tuple does not match nargs")
 	// 	}
 	// }
 	ac.CheckHelp(action)
 
 	return ac.AddAction(action)
+}
+
+// FIXME: not done
+func (ac *ActionsContainer) AddArgumentGroup(argumentGroup ActionsContainerInterface) ActionsContainerInterface {
+	// group := NewArgumentGroup(
+	// 	a,
+	// 	kwargs["title"],
+	// 	kwargs["description"],
+
+	// )
+	return argumentGroup
+}
+
+func (ac *ActionsContainer) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup ActionsContainerInterface) ActionsContainerInterface {
+	return mutuallyExclusiveGroup
+}
+
+func (ac *ActionsContainer) AddAction(action ActionInterface) ActionInterface {
+	// resolve any conflicts
+	ac.CheckConflict(action)
+
+	// add to actions list
+	ac.Actions = append(ac.Actions, action)
+	action.Struct().Container = ac
+
+	// index the action by any option strings it has
+	for _, optionString := range action.Struct().OptionStrings {
+		ac.OptionStringActions[optionString] = action
+	}
+
+	// set the flag if any option strings look like negative numbers
+	for _, optionString := range action.Struct().OptionStrings {
+		if ac.NegativeNumberMatcher.MatchString(optionString) {
+			if len(ac.HasNegativeNumberOptionals) == 0 {
+				ac.HasNegativeNumberOptionals = append(ac.HasNegativeNumberOptionals, true)
+			}
+		}
+	}
+	// return the created action
+	return action
+}
+
+func (ac *ActionsContainer) RemoveAction(action ActionInterface) {
+	for i, v := range ac.Actions {
+		if v == action {
+			// Remove the item by slicing the array
+			ac.Actions = append(ac.Actions[:i], ac.Actions[i+1:]...)
+		}
+	}
+}
+
+// Not done
+func (ac *ActionsContainer) AddContainerAction(container ActionsContainerInterface) {
+	titleGroupMap := make(map[string]ActionsContainerInterface)
+	for _, groupInterface := range ac.ActionGroups {
+		group := groupInterface.(*ArgumentGroup)
+		if _, found := titleGroupMap[group.Title]; found {
+			panic(fmt.Sprintf("cannot merge actions - two groups are named %v", group.Title))
+		}
+		titleGroupMap[group.Title] = group
+	}
+
+	//  map each action to its group
+	groupMap := make(map[ActionInterface]ActionsContainerInterface)
+	for _, groupInterface := range container.Struct().ActionGroups {
+		group := groupInterface.(*ArgumentGroup)
+		// if a group with the title exists, use that, otherwise
+		// create a new group matching the container's group
+		if _, found := titleGroupMap[group.Title]; found {
+			ac.AddArgumentGroup(
+				NewArgumentGroup(
+					ac,
+					group.Title,
+					group.Description,
+					"",
+					group.ConflictHandler,
+					nil,
+				),
+			)
+		}
+
+		for _, action := range groupInterface.(*ArgumentGroup).GroupActions {
+			groupMap[action] = titleGroupMap[group.Title]
+		}
+	}
+
+	// add container's mutually exclusive groups
+	// NOTE: if add_mutually_exclusive_group ever gains title= and
+	// description= then this code will need to be expanded as above
+	var cont ActionsContainerInterface
+	for _, groupInterface := range container.Struct().MutuallyExclusiveGroups {
+		group := groupInterface.(*MutuallyExclusiveGroup)
+		if group.ActionsContainer == container {
+			cont = ac
+		} else {
+			cont = titleGroupMap[group.ActionsContainer.Title]
+		}
+		mutexGroup := cont.AddMutuallyExclusiveGroup(
+			&MutuallyExclusiveGroup{
+				ActionsContainer: &ActionsContainer{
+					Required: group.Required,
+				},
+			},
+		)
+
+		// map the actions to their new mutex group
+		for _, action := range group.GroupActions {
+			if _, found := groupMap[action]; found {
+				groupMap[action] = mutexGroup
+			}
+		}
+	}
+
+	// add all actions to this container or their group
+	for _, action := range container.Struct().Actions {
+		if group, found := groupMap[action]; found {
+			group.AddAction(action)
+		} else {
+			ac.AddAction(action)
+		}
+	}
+}
+
+// _get_positional_kwargs
+func (ac *ActionsContainer) GetPositionalArgument(argument *Argument) *Argument {
+	// make sure required is not specified
+	if argument.Required {
+		panic("'Required' is an invalid argument for positionals")
+	}
+
+	// mark positional arguments as required if at least one is
+	// always required
+	nargs := argument.Nargs
+	switch t := nargs.(type) {
+	case int:
+		if t == 0 { // `t` is the asserted int value
+			panic("nargs for positionals must be != 0")
+		}
+	case string:
+		if t != OPTIONAL && t != ZERO_OR_MORE && t != REMAINDER && t != SUPPRESS {
+			argument.Required = true
+		}
+	}
+
+	// return the keyword arguments with no option strings
+	argument.Dest = argument.OptionStrings[0]
+	argument.OptionStrings = []string{}
+	return argument
+}
+
+// _get_optional_kwargs
+func (ac *ActionsContainer) GetOptionalArgument(argument *Argument) *Argument {
+	optionStrings := []string{}
+	longOptionStrings := []string{}
+	for _, optionString := range argument.OptionStrings {
+		if !isArgInChars(optionString[:1], ac.PrefixChars) {
+			panic(fmt.Sprintf("invalid option string %v: must start with a character %s", optionString, ac.PrefixChars))
+		}
+
+		// strings starting with two prefix characters are long options
+		optionStrings = append(optionStrings, optionString)
+		if len(optionString) > 1 && isArgInChars(optionString[1:2], ac.PrefixChars) {
+			longOptionStrings = append(longOptionStrings, optionString)
+		}
+	}
+
+	// infer destination, '--foo-bar' -> 'foo_bar' and '-x' -> 'x'
+	dest := argument.Dest
+	var destOptionString string
+
+	if dest == "" {
+		if len(longOptionStrings) > 1 {
+			destOptionString = longOptionStrings[0]
+		} else {
+			destOptionString = optionStrings[0]
+		}
+		dest = strings.TrimLeft(destOptionString, ac.PrefixChars)
+		if dest == "" {
+			panic(fmt.Sprintf("dest= is required for options like %v", optionStrings))
+		}
+		dest = strings.ReplaceAll(dest, "-", "_")
+	}
+
+	// return the updated argument
+	argument.Dest = dest
+	argument.OptionStrings = optionStrings
+	return argument
+}
+
+// FIXME: not done
+func (ac *ActionsContainer) GetHandler() func(ActionInterface, []ConflictingOption) {
+
+	switch ac.ConflictHandler {
+	// case "ignore":
+	// 	return func() {
+	// 		fmt.Println("Ignoring conflicts")
+	// 	}
+	// case "resolve":
+	// 	return func() {
+	// 		fmt.Println("Resolving conflicts")
+	// 	}
+	default:
+		return func(ai ActionInterface, a []ConflictingOption) {} // temp
+		// panic(fmt.Sprintf("invalid conflict resolution value: %v", ac.ConflictHandler))
+	}
+}
+
+func (ac *ActionsContainer) CheckConflict(action ActionInterface) {
+
+	// find all options that conflict with this option
+	var conflOptionals []ConflictingOption
+	for _, optionString := range action.Struct().OptionStrings {
+		if _, found := ac.OptionStringActions[optionString]; found {
+			conflOptional := ac.OptionStringActions[optionString]
+			conflOptionals = append(conflOptionals, ConflictingOption{
+				OptionString:   optionString,
+				ConflictAction: conflOptional,
+			})
+		}
+	}
+
+	// resolve any conflicts
+	if len(conflOptionals) > 0 {
+		conflictHandler := ac.GetHandler()
+		conflictHandler(action, conflOptionals)
+	}
+}
+
+func (ac *ActionsContainer) HandleConflictError(action ActionInterface, conflictingActions []ConflictingOption) {
+	message := "conflicting option strings: %s"
+	conflictStrings := []string{}
+	for _, conflict := range conflictingActions {
+		optionString := conflict.OptionString
+		action = conflict.ConflictAction
+		conflictStrings = append(conflictStrings, optionString)
+	}
+	conflictString := fmt.Sprintf(message, strings.Join(conflictStrings, ", "))
+	panic(fmt.Sprintf("%v: %s", action, conflictString))
+}
+
+func (ac *ActionsContainer) HandleConflictResolve(action ActionInterface, conflictingActions []ConflictingOption) {
+	// remove all conflicting options
+
+	for _, item := range conflictingActions {
+		optionString := item.OptionString
+		action := item.ConflictAction
+
+		slice := action.Struct().OptionStrings
+
+		for i, v := range slice {
+			if v == optionString {
+				// Remove the item by slicing the array
+				action.Struct().OptionStrings = append(slice[:i], slice[i+1:]...)
+				delete(ac.OptionStringActions, optionString)
+
+				// if the option now has no option string, remove it from the
+				// container holding it
+				if len(action.Struct().OptionStrings) == 0 {
+					action.Struct().Container.(*ActionsContainer).RemoveAction(action)
+				}
+			}
+		}
+
+	}
+}
+
+// FIXME: not done
+func (ac *ActionsContainer) CheckHelp(action ActionInterface) {
+	// formatter := action.Struct().GetFormatter
+	// if action.Struct().Help != "" && formatter {
+	// 	formatter.ExpandHelp(action)
+	// }
 }
 
 // func (ac *ActionsContainer) createAction(actionName any, argument *Argument) ActionInterface {
@@ -269,212 +565,3 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 // 	// panic(fmt.Sprintf("result does not embed Action: %T", result))
 
 // }
-
-func (ac *ActionsContainer) AddArgumentGroup(argumentGroup ActionsContainerInterface) {
-	// group := NewArgumentGroup(
-	// 	a,
-	// 	kwargs["title"],
-	// 	kwargs["description"],
-
-	// )
-}
-
-func (ac *ActionsContainer) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup *MutuallyExclusiveGroup) ActionsContainerInterface {
-	return mutuallyExclusiveGroup
-}
-
-func (ac *ActionsContainer) AddAction(action ActionInterface) ActionInterface {
-	// resolve any conflicts
-	ac.CheckConflict(action)
-
-	// add to actions list
-	ac.Actions = append(ac.Actions, action)
-	action.Struct().container = ac
-
-	// index the action by any option strings it has
-	for _, optionString := range action.Struct().OptionStrings {
-		ac.optionStringActions[optionString] = action
-	}
-
-	// set the flag if any option strings look like negative numbers
-	for _, optionString := range action.Struct().OptionStrings {
-		if ac.negativeNumberMatcher.MatchString(optionString) {
-			if len(ac.hasNegativeNumberOptionals) == 0 {
-				ac.hasNegativeNumberOptionals = append(ac.hasNegativeNumberOptionals, true)
-			}
-		}
-	}
-	// return the created action
-	return action
-}
-
-func (ac *ActionsContainer) RemoveAction(action *Action) {
-	for i, v := range ac.Actions {
-		if v == action {
-			// Remove the item by slicing the array
-			ac.Actions = append(ac.Actions[:i], ac.Actions[i+1:]...)
-		}
-	}
-}
-
-func (ac *ActionsContainer) AddContainerAction(container *ActionsContainer) {
-	titleGroupMap := make(map[string]ActionsContainerInterface)
-	for _, group := range ac.actionGroups {
-		if _, found := titleGroupMap[group.Title]; found {
-			panic(fmt.Sprintf("cannot merge actions - two groups are named %v", group.Title))
-		}
-		titleGroupMap[group.Title] = group
-	}
-
-	//  map each action to its group
-	groupMap := make(map[ActionInterface]ActionsContainerInterface)
-	for _, group := range container.actionGroups {
-		// if a group with the title exists, use that, otherwise
-		// create a new group matching the container's group
-		if _, found := titleGroupMap[group.Title]; found {
-			ac.AddArgumentGroup(
-				&ArgumentGroup{
-					Title:           group.Title,
-					Description:     group.Description,
-					ConflictHandler: group.ConflictHandler,
-				},
-			)
-		}
-
-		for _, action := range group.GroupActions {
-			groupMap[action] = titleGroupMap[group.Title]
-		}
-	}
-
-	// add container's mutually exclusive groups
-	// NOTE: if add_mutually_exclusive_group ever gains title= and
-	// description= then this code will need to be expanded as above
-	var cont ActionsContainerInterface
-	for _, group := range container.mutuallyExclusiveGroups {
-		if group.ActionsContainer == container {
-			cont = ac
-		} else {
-			cont = titleGroupMap[group.ActionsContainer.Title]
-		}
-		mutexGroup := cont.AddMutuallyExclusiveGroup(
-			&MutuallyExclusiveGroup{
-				ActionsContainer: &ActionsContainer{
-					Required: group.Required,
-				},
-			},
-		)
-
-		// map the actions to their new mutex group
-		for _, action := range group.GroupActions {
-			if _, found := groupMap[action]; found {
-				groupMap[action] = mutexGroup
-			}
-		}
-	}
-
-	// add all actions to this container or their group
-	for _, action := range container.Actions {
-		if group, found := groupMap[action]; found {
-			group.AddAction(action)
-		} else {
-			ac.AddAction(action)
-		}
-	}
-}
-
-// _get_positional_kwargs
-func (ac *ActionsContainer) getPositionalArgument(argument *Argument) *Argument {
-	// make sure required is not specified
-	if argument.Required {
-		panic("'Required' is an invalid argument for positionals")
-	}
-
-	// mark positional arguments as required if at least one is
-	// always required
-	nargs := argument.Nargs
-	switch t := nargs.(type) {
-	case int:
-		if t == 0 { // `t` is the asserted int value
-			panic("nargs for positionals must be != 0")
-		}
-	case string:
-		if t != OPTIONAL && t != ZERO_OR_MORE && t != REMAINDER && t != SUPPRESS {
-			argument.Required = true
-		}
-	}
-
-	// return the keyword arguments with no option strings
-	argument.Dest = argument.OptionStrings[0]
-	argument.OptionStrings = []string{}
-	return argument
-}
-
-// _get_optional_kwargs
-func (ac *ActionsContainer) getOptionalArgument(argument *Argument) *Argument {
-	optionStrings := []string{}
-	longOptionStrings := []string{}
-	for _, optionString := range argument.OptionStrings {
-		if !isArgInChars(optionString[:1], ac.PrefixChars) {
-			panic(fmt.Sprintf("invalid option string %v: must start with a character %s", optionString, ac.PrefixChars))
-		}
-
-		// strings starting with two prefix characters are long options
-		optionStrings = append(optionStrings, optionString)
-		if len(optionString) > 1 && isArgInChars(optionString[1:2], ac.PrefixChars) {
-			longOptionStrings = append(longOptionStrings, optionString)
-		}
-	}
-
-	// infer destination, '--foo-bar' -> 'foo_bar' and '-x' -> 'x'
-	dest := argument.Dest
-	var destOptionString string
-
-	if dest == "" {
-		if len(longOptionStrings) > 1 {
-			destOptionString = longOptionStrings[0]
-		} else {
-			destOptionString = optionStrings[0]
-		}
-		dest = strings.TrimLeft(destOptionString, ac.PrefixChars)
-		if dest == "" {
-			panic(fmt.Sprintf("dest= is required for options like %v", optionStrings))
-		}
-		dest = strings.ReplaceAll(dest, "-", "_")
-	}
-
-	// return the updated argument
-	argument.Dest = dest
-	argument.OptionStrings = optionStrings
-	return argument
-}
-
-func (ac *ActionsContainer) GetHandler() (func(), error) {
-	switch ac.ConflictHandler {
-	case "ignore":
-		return func() {
-			fmt.Println("Ignoring conflicts")
-		}, nil
-	case "resolve":
-		return func() {
-			fmt.Println("Resolving conflicts")
-		}, nil
-	default:
-		return nil, fmt.Errorf("invalid conflict resolution value: %v", ac.ConflictHandler)
-	}
-}
-
-func (ac *ActionsContainer) CheckConflict(action ActionInterface) {
-
-}
-
-func (ac *ActionsContainer) HandleConflictError(action *Action, conflictingActions []*Action) {
-
-}
-
-func (ac *ActionsContainer) HandleConflictResolve(action *Action, conflictingActions []*Action) {
-
-}
-
-func (ac *ActionsContainer) CheckHelp(action ActionInterface) {
-
-}

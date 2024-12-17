@@ -1,50 +1,51 @@
 package argparse_test
 
 import (
+	"argparse"
+	"fmt"
+	"reflect"
 	"testing"
 )
 
 func TestAppendConstAction(t *testing.T) {
 
-	// n := argparse.NewNamespace(map[string]any{
-	// 	"foo": []any{"bar"},
-	// })
+	n := argparse.NewNamespace(map[string]any{
+		"foo": []any{"bar"},
+	})
 
-	// a, err := argparse.NewAppendConstAction(
-	// 	[]string{"-f", "--foo"},
-	// 	"foo",
-	// 	"baz",
-	// 	nil,
-	// 	false,
-	// 	"Enable verbose output",
-	// 	"",
-	// 	false,
-	// )
+	ai := argparse.NewAppendConstAction(
+		&argparse.Argument{
+			OptionStrings: []string{"-f", "--foo"},
+			Dest:          "foo",
+			Const:         "baz",
+			Default:       "baz",
+			Help:          "Enable verbose output",
+			Required:      false,
+		},
+	)
 
-	// if err != nil {
-	// 	t.Errorf("AppendConstAction creation error: %s", err)
-	// }
+	fmt.Println("TestAction:")
+	prettyPrintMap(ai.GetMap())
 
-	// fmt.Printf("Kwargs: %v\n", a.GetMap())
+	ai.Call(nil, n, "baz", "")
+	a := ai.Struct()
 
-	// a.Call(nil, n, "baz", "")
+	referenceValue := []any{"bar", "baz"}
 
-	// referenceValue := []any{"bar", "baz"}
+	if value, found := n.Get("foo"); !found {
+		t.Errorf("Not found attribute %s in namespace\n", a.Dest)
+	} else {
+		// Use reflect.DeepEqual to compare the values
+		if !reflect.DeepEqual(value, referenceValue) {
+			t.Errorf("Wrong value got, expected %v, got %v\n", referenceValue, value)
+		} else {
+			fmt.Printf("%s: %v\n", a.Dest, value)
+		}
+	}
 
-	// if value, found := n.Get("foo"); !found {
-	// 	t.Errorf("Not found attribute %s in namespace\n", a.Dest)
-	// } else {
-	// 	// Use reflect.DeepEqual to compare the values
-	// 	if !reflect.DeepEqual(value, referenceValue) {
-	// 		t.Errorf("Wrong value got, expected %v, got %v\n", referenceValue, value)
-	// 	} else {
-	// 		fmt.Printf("%s: %v\n", a.Dest, value)
-	// 	}
-	// }
-
-	// if f := a.FormatUsage(); !(f == "-f") {
-	// 	t.Errorf("Not found attribute %s in namespace\n", a.Dest)
-	// } else {
-	// 	fmt.Printf("Format usage: %s\n", f)
-	// }
+	if f := ai.FormatUsage(); !(f == "-f") {
+		t.Errorf("Not found attribute %s in namespace\n", a.Dest)
+	} else {
+		fmt.Printf("Format usage: %s\n", f)
+	}
 }

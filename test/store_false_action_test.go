@@ -18,7 +18,8 @@ func TestStoreFalseAction(t *testing.T) {
 		},
 	)
 
-	fmt.Printf("Kwargs: %v\n", ai.GetMap())
+	fmt.Println("TestStoreFalseAction:")
+	prettyPrintMap(ai.GetMap())
 
 	ai.Call(nil, n, []any{1, 2, 3}, "")
 	a := ai.Struct()

@@ -32,6 +32,10 @@ func (a *MutuallyExclusiveGroup) RemoveAction(action ActionInterface) {
 
 }
 
-func (a *MutuallyExclusiveGroup) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup *MutuallyExclusiveGroup) ActionsContainerInterface {
+func (ag *MutuallyExclusiveGroup) AddArgumentGroup(argumentGroup ActionsContainerInterface) ActionsContainerInterface {
+	panic("argument group can not be nested")
+}
+
+func (a *MutuallyExclusiveGroup) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup ActionsContainerInterface) ActionsContainerInterface {
 	panic("mutually exclusive groups cannot be nested")
 }

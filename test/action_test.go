@@ -2,6 +2,7 @@ package argparse_test
 
 import (
 	"argparse"
+	"fmt"
 	"testing"
 )
 
@@ -27,4 +28,7 @@ func TestAction(t *testing.T) {
 	if kwargs["Dest"] != "verbose" {
 		t.Errorf("expected %q, got %q", "verbose", kwargs["Dest"])
 	}
+
+	fmt.Println("TestAction:")
+	prettyPrintMap(action.GetMap())
 }

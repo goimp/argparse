@@ -1,9 +1,5 @@
 package argparse
 
-import (
-	"fmt"
-)
-
 const (
 	SUPPRESS               = "==SUPPRESS=="
 	OPTIONAL               = "?"
@@ -16,9 +12,4 @@ const (
 
 func ProgName(prog string) string {
 	return ""
-}
-
-// Greet returns a greeting message.
-func Greet(name string) string {
-	return fmt.Sprintf("Hello, %s!", name)
 }
