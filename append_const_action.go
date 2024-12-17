@@ -6,36 +6,27 @@ import (
 
 // AppendConstAction represents an action that appends a constant value to a slice.
 type AppendConstAction struct {
-	Action // Embedding Action to reuse functionality
+	*Action // Embedding Action to reuse functionality
 }
 
 // NewAppendConstAction creates a new AppendConstAction.
-func NewAppendConstAction(
-	optionStrings []string,
-	dest string,
-	constVal any,
-	defaultVal any,
-	required bool,
-	help string,
-	metavar string,
-	deprecated bool,
-) (*AppendConstAction, error) {
+func NewAppendConstAction(argument *Argument) *AppendConstAction {
 	return &AppendConstAction{
-		Action: Action{
-			OptionStrings: optionStrings,
-			Dest:          dest,
+		Action: &Action{
+			OptionStrings: argument.OptionStrings,
+			Dest:          argument.Dest,
 			Nargs:         0,
-			Const:         constVal,
-			Default:       defaultVal,
-			Required:      required,
-			Help:          help,
-			Metavar:       metavar,
-			Deprecated:    deprecated,
+			Const:         argument.Const,
+			Default:       argument.Default,
+			Required:      argument.Required,
+			Help:          argument.Help,
+			Metavar:       argument.Metavar,
+			Deprecated:    argument.Deprecated,
 		},
-	}, nil
+	}
 }
 
-func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) {
+func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}
@@ -43,4 +34,5 @@ func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, v
 	items = copy_items.CopyItems(items)
 	items = append(items.([]any), a.Const)
 	namespace.Set(a.Dest, items)
+	return nil
 }

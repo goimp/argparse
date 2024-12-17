@@ -148,6 +148,7 @@ type Argument struct {
 	Metavar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
 	Action        string
+	Version       string
 }
 
 func isArgInChars(value string, chars string) bool {
@@ -159,12 +160,12 @@ func isArgInChars(value string, chars string) bool {
 	return false
 }
 
-func (ac *ActionsContainer) AddArgument(argument *Argument) any {
+func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 	chars := ac.PrefixChars
 	args := argument.OptionStrings
 
 	// Check if args are empty or not of a valid prefix
-	if args == nil || (len(args) == 1) && !isArgInChars(args[0][:1], chars) {
+	if args == nil || (len(args) == 1 && !isArgInChars(args[0][:1], chars)) {
 		// Handle positional arguments
 		if argument.Dest != "" {
 			panic("Dest supplied twice for positional argument, did you mean Metavar")
@@ -353,6 +354,7 @@ func (ac *ActionsContainer) getPositionalArgument(argument *Argument) *Argument 
 	}
 
 	// return the keyword arguments with no option strings
+	argument.Dest = argument.OptionStrings[0]
 	argument.OptionStrings = []string{}
 	return argument
 }

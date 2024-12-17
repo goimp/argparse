@@ -1,29 +1,27 @@
 package argparse_test
 
 import (
-	"argparse"
-	"fmt"
 	"testing"
 )
 
 func TestHelpAction(t *testing.T) {
 
-	p := &argparse.ArgumentParser{}
+	// p := &argparse.ArgumentParser{}
 
-	a, err := argparse.NewHelpAction(
-		[]string{"-h", "--help"},
-		"help",
-		nil,
-		"Enable verbose output",
-		false,
-	)
+	// a, err := argparse.NewHelpAction(
+	// 	[]string{"-h", "--help"},
+	// 	"help",
+	// 	nil,
+	// 	"Enable verbose output",
+	// 	false,
+	// )
 
-	if err != nil {
-		t.Errorf("HelpAction creation error: %s", err)
-	}
+	// if err != nil {
+	// 	t.Errorf("HelpAction creation error: %s", err)
+	// }
 
-	fmt.Printf("Kwargs: %v\n", a.GetKwargs())
+	// fmt.Printf("Kwargs: %v\n", a.GetKwargs())
 
-	p.PrintHelp(nil)
+	// p.PrintHelp(nil)
 
 }

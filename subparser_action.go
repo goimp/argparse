@@ -42,30 +42,22 @@ func NewChoicesPseudoAction(name string, aliases []string, help string) *Choices
 }
 
 // NewSubParsersAction creates a new SubParsersAction instance
-func NewSubParsersAction(
-	optionStrings []string,
-	prog string,
-	parserClass func(kwargs any) (any, error),
-	dest string,
-	required bool,
-	help string,
-	metavar string,
-) (*SubParsersAction, error) {
+func NewSubParsersAction(argument *Action) *SubParsersAction {
 	return &SubParsersAction{
 		Action: Action{
-			OptionStrings: optionStrings,
-			Dest:          dest,
+			OptionStrings: argument.OptionStrings,
+			Dest:          argument.Dest,
 			Nargs:         PARSER,
-			Required:      required,
-			Help:          help,
-			Metavar:       metavar,
+			Required:      argument.Required,
+			Help:          argument.Help,
+			Metavar:       argument.Metavar,
 		},
-		ProgPrefix:     prog,
-		ParserClass:    parserClass,
-		NameParserMap:  make(map[string]any),
-		ChoicesActions: []*ChoicesPseudoAction{},
-		Deprecated:     make(map[string]struct{}),
-	}, nil
+		// ProgPrefix:     prog,
+		// ParserClass:    parserClass,
+		// NameParserMap:  make(map[string]any),
+		// ChoicesActions: []*ChoicesPseudoAction{},
+		// Deprecated:     make(map[string]struct{}),
+	}
 }
 
 func (p *SubParsersAction) AddParser(name string, deprecated bool, kwargs map[string]any) (any, error) {
@@ -138,7 +130,7 @@ func (p *SubParsersAction) GetSubactions() []*ChoicesPseudoAction {
 	return p.ChoicesActions
 }
 
-func (p *SubParsersAction) Call(parser *ArgumentParser, namespace Namespace, values []any, optionString string) {
+func (p *SubParsersAction) Call(parser *ArgumentParser, namespace Namespace, values []any, optionString string) error {
 	parserName := values[0].(string)
 	argStrings := values[1:]
 
@@ -188,4 +180,5 @@ func (p *SubParsersAction) Call(parser *ArgumentParser, namespace Namespace, val
 			}
 		}
 	}
+	return nil
 }

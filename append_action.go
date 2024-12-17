@@ -7,59 +7,47 @@ import (
 
 // AppendAction represents an action that appends values to a slice.
 type AppendAction struct {
-	Action // Embedding Action to reuse functionality
+	*Action // Embedding Action to reuse functionality
 }
 
 // NewAppendAction creates a new AppendAction.
-func NewAppendAction(
-	optionStrings []string,
-	dest string,
-	nargs any,
-	constVal any,
-	defaultVal any,
-	typ Type,
-	choices []any,
-	required bool,
-	help string,
-	metavar string,
-	deprecated bool,
-) (*AppendAction, error) {
+func NewAppendAction(argument *Argument) *AppendAction {
 
-	switch v := nargs.(type) {
+	switch v := argument.Nargs.(type) {
 	case int:
 		if v == 0 {
-			return nil, fmt.Errorf(
+			panic(
 				"nargs for append actions must be != 0; if arg strings are not supplying the value to append, the append const action may be more appropriate",
 			)
 		}
 	case string:
-		if constVal != nil && v != OPTIONAL {
-			return nil, fmt.Errorf("nargs must %s to supply const", OPTIONAL)
+		if argument.Const != nil && v != OPTIONAL {
+			panic(fmt.Sprintf("nargs must %s to supply const", OPTIONAL))
 		}
 	case nil:
 		break
 	default:
-		return nil, fmt.Errorf("nargs must be an integer or a string literal (e.g., %s)", OPTIONAL)
+		panic(fmt.Sprintf("nargs must be an integer or a string literal (e.g., %s)", OPTIONAL))
 	}
 
 	return &AppendAction{
-		Action: Action{
-			OptionStrings: optionStrings,
-			Dest:          dest,
-			Nargs:         nargs,
-			Const:         constVal,
-			Default:       defaultVal,
-			Type:          typ,
-			Choices:       choices,
-			Required:      required,
-			Help:          help,
-			Metavar:       metavar,
-			Deprecated:    deprecated,
+		Action: &Action{
+			OptionStrings: argument.OptionStrings,
+			Dest:          argument.Dest,
+			Nargs:         argument.Nargs,
+			Const:         argument.Const,
+			Default:       argument.Default,
+			Type:          argument.Type,
+			Choices:       argument.Choices,
+			Required:      argument.Required,
+			Help:          argument.Help,
+			Metavar:       argument.Metavar,
+			Deprecated:    argument.Deprecated,
 		},
-	}, nil
+	}
 }
 
-func (a *AppendAction) Call(parser *ArgumentParser, namespace *Namespace, values []any, optionString string) {
+func (a *AppendAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}
@@ -67,4 +55,5 @@ func (a *AppendAction) Call(parser *ArgumentParser, namespace *Namespace, values
 	items = copy_items.CopyItems(items)
 	items = append(items.([]any), values)
 	namespace.Set(a.Dest, items)
+	return nil
 }

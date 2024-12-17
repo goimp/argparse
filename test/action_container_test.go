@@ -4,15 +4,29 @@ import (
 	"argparse"
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 )
 
 func prettyPrintMap(mapping map[string]any) {
-	for key, value := range mapping {
+	// Крок 1: Зібрати ключі у зріз
+	keys := make([]string, 0, len(mapping))
+	for key := range mapping {
+		keys = append(keys, key)
+	}
+
+	// Крок 2: Відсортувати ключі
+	sort.Strings(keys)
+
+	// Крок 3: Ітерувати по відсортованих ключах і виводити значення
+	for _, key := range keys {
+		value := mapping[key]
 		switch t := value.(type) {
 		case int:
 			fmt.Printf("%-10s\t:\t%d\n", key, t)
-		case float32, float64:
+		case float32:
+			fmt.Printf("%-10s\t:\t%.6f\n", key, t)
+		case float64:
 			fmt.Printf("%-10s\t:\t%.6f\n", key, t)
 		case string:
 			fmt.Printf("%-10s\t:\t%s\n", key, t)
@@ -65,6 +79,61 @@ func TestActionsContainer(t *testing.T) {
 			OptionStrings: []string{"--counter"},
 			Action:        "count",
 			Dest:          "counter",
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"--help"},
+			Action:        "help",
+			Dest:          "help",
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"-V", "--version"},
+			Action:        "version",
+			Help:          "Print version",
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"--append"},
+			Action:        "append",
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"--extend"},
+			Action:        "extend",
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"--append-const"},
+			Action:        "append_const",
+		},
+	)
+
+	// Positional
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"pos"},
+			Action:        "store",
+			Nargs:         2,
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{},
+			Dest:          "pos2",
+			Action:        "store",
+			Nargs:         1,
 		},
 	)
 

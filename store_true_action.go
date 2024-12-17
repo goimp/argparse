@@ -27,6 +27,5 @@ func (a *StoreTrueAction) FormatUsage() string {
 }
 
 func (a *StoreTrueAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
-	a.StoreConstAction.Call(parser, namespace, values, optionString)
-	return nil
+	return a.StoreConstAction.Call(parser, namespace, values, optionString)
 }

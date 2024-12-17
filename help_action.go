@@ -7,41 +7,36 @@ type HelpAction struct {
 
 // NewHelpAction creates a new HelpAction.
 // NewHelpAction creates a new HelpAction.
-func NewHelpAction(
-	optionStrings []string,
-	dest string,
-	defaultVal any,
-	help string,
-	deprecated bool,
-) (*HelpAction, error) {
+func NewHelpAction(argument *Argument) *HelpAction {
 
 	// Default dest to SUPPRESS if empty
-	if dest == "" {
-		dest = SUPPRESS
+	if argument.Dest == "" {
+		argument.Dest = SUPPRESS
 	}
 
 	// Default defaultVal to SUPPRESS if nil
-	if defaultVal == nil {
-		defaultVal = SUPPRESS
+	if argument.Default == nil {
+		argument.Default = SUPPRESS
 	}
 
 	// Create and return the HelpAction instance
 	return &HelpAction{
 		Action: Action{
-			OptionStrings: optionStrings,
-			Dest:          dest,
+			OptionStrings: argument.OptionStrings,
+			Dest:          argument.Dest,
 			Nargs:         0,
-			Default:       defaultVal,
-			Help:          help,
-			Deprecated:    deprecated,
+			Default:       argument.Default,
+			Help:          argument.Help,
+			Deprecated:    argument.Deprecated,
 		},
-	}, nil
+	}
 }
 
 // SetValue prints the help message and exits the program.
-func (a *HelpAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) {
+func (a *HelpAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	if parser != nil {
 		parser.PrintHelp(nil)
 		parser.Exit(0, "")
 	}
+	return nil
 }
