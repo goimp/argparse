@@ -3,9 +3,11 @@ package argparse
 import "fmt"
 
 type ArgumentGroup struct {
-	ActionsContainer
-	title        string
-	groupActions []ActionInterface
+	*ActionsContainer
+	Title           string
+	Description     string
+	ConflictHandler any
+	GroupActions    []ActionInterface
 }
 
 func NewArgumentGroup(
@@ -14,7 +16,7 @@ func NewArgumentGroup(
 	description string,
 	kwargs map[string]any,
 	groupActions []ActionInterface,
-) (*ArgumentGroup, error) {
+) ActionsContainerInterface {
 
 	if _, exist := kwargs["prefixChars"]; exist {
 		fmt.Println("The use of the undocumented 'prefix_chars' parameter in ArgumentParser.AddArgumentGroup() is deprecated.")
@@ -32,9 +34,9 @@ func NewArgumentGroup(
 	)
 
 	group := &ArgumentGroup{
-		ActionsContainer: *action,
-		title:            title,
-		groupActions:     []ActionInterface{},
+		ActionsContainer: action.(*ActionsContainer),
+		Title:            title,
+		GroupActions:     []ActionInterface{},
 	}
 
 	group.registries = container.registries
@@ -44,12 +46,12 @@ func NewArgumentGroup(
 	group.hasNegativeNumberOptionals = container.hasNegativeNumberOptionals
 	group.mutuallyExclusiveGroups = container.mutuallyExclusiveGroups
 
-	return group, nil
+	return group
 }
 
 func (ag *ArgumentGroup) AddAction(action ActionInterface) ActionInterface {
 	act := ag.ActionsContainer.AddAction(action)
-	ag.groupActions = append(ag.groupActions, act)
+	ag.GroupActions = append(ag.GroupActions, act)
 	return act
 }
 
@@ -65,6 +67,6 @@ func (ag *ArgumentGroup) RemoveAction(dest string) error {
 	return fmt.Errorf("action with dest %q not found", dest)
 }
 
-func (ag *ArgumentGroup) AddArgumentGroup(args []any, kwargs map[string]any) {
+func (ag *ArgumentGroup) AddArgumentGroup(args []any, kwargs map[string]any) ActionsContainerInterface {
 	panic("argument group can not be nested")
 }

@@ -1,7 +1,8 @@
 package argparse
 
 type MutuallyExclusiveGroup struct {
-	ActionsContainer
+	*ActionsContainer
+	GroupActions []ActionInterface
 }
 
 func NewMutuallyExclusiveGroup(
@@ -9,9 +10,9 @@ func NewMutuallyExclusiveGroup(
 	prefixChars string,
 	argumentDefault any,
 	conflictHandler any,
-) (*MutuallyExclusiveGroup, error) {
+) ActionsContainerInterface {
 
-	actions_container := NewActionsContainer(
+	actionsContainer := NewActionsContainer(
 		description,
 		prefixChars,
 		argumentDefault,
@@ -19,18 +20,18 @@ func NewMutuallyExclusiveGroup(
 	)
 
 	return &MutuallyExclusiveGroup{
-		ActionsContainer: *actions_container,
-	}, nil
+		ActionsContainer: actionsContainer.(*ActionsContainer),
+	}
 }
 
-func (a *MutuallyExclusiveGroup) AddAction(action Action) *Action {
+func (a *MutuallyExclusiveGroup) AddAction(action ActionInterface) ActionInterface {
 	return &Action{}
 }
 
-func (a *MutuallyExclusiveGroup) RemoveAction(action Action) {
+func (a *MutuallyExclusiveGroup) RemoveAction(action ActionInterface) {
 
 }
 
-func (a *MutuallyExclusiveGroup) AddMutuallyExclusiveGroup(args []any, kwargs map[string]any) {
+func (a *MutuallyExclusiveGroup) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup *MutuallyExclusiveGroup) ActionsContainerInterface {
 	panic("mutually exclusive groups cannot be nested")
 }

@@ -137,7 +137,7 @@ func TestActionsContainer(t *testing.T) {
 		},
 	)
 
-	for _, actIntf := range container.Actions {
+	for _, actIntf := range container.(*argparse.ActionsContainer).Actions {
 		fmt.Println(reflect.TypeOf(actIntf))
 		prettyPrintMap(actIntf.GetMap())
 	}

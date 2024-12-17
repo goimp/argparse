@@ -2,13 +2,18 @@ package argparse
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 )
 
 type Registry = map[any]any
 type Registries = map[string]Registry
+
+type ActionsContainerInterface interface {
+	AddMutuallyExclusiveGroup(*MutuallyExclusiveGroup) ActionsContainerInterface
+	AddArgument(*Argument) ActionInterface
+	AddAction(ActionInterface) ActionInterface
+}
 
 type ActionsContainer struct {
 	Description                string
@@ -18,13 +23,15 @@ type ActionsContainer struct {
 	registries                 Registries
 	Actions                    []ActionInterface
 	optionStringActions        map[string]any
-	actionGroups               []any
-	mutuallyExclusiveGroups    []any
+	actionGroups               []*ArgumentGroup
+	mutuallyExclusiveGroups    []*MutuallyExclusiveGroup
 	defaults                   map[string]any
 	negativeNumberMatcher      *regexp.Regexp
 	hasNegativeNumberOptionals []bool
 
 	getFormatter any
+	Title        string
+	Required     bool
 }
 
 func NewActionsContainer(
@@ -32,7 +39,7 @@ func NewActionsContainer(
 	prefixChars string,
 	argumentDefault any,
 	conflictHandler any,
-) *ActionsContainer {
+) ActionsContainerInterface {
 
 	container := &ActionsContainer{
 		Description:                description,
@@ -42,8 +49,8 @@ func NewActionsContainer(
 		registries:                 make(Registries),    // set up registries
 		Actions:                    []ActionInterface{}, // action storage
 		optionStringActions:        make(map[string]any),
-		actionGroups:               []any{}, // groups
-		mutuallyExclusiveGroups:    []any{},
+		actionGroups:               []*ArgumentGroup{}, // groups
+		mutuallyExclusiveGroups:    []*MutuallyExclusiveGroup{},
 		defaults:                   make(map[string]any),            // defaults storage
 		negativeNumberMatcher:      regexp.MustCompile(`-\.?(\d+)`), // determines whether an "option" looks like a negative number
 		hasNegativeNumberOptionals: []bool{},                        // # whether or not there are any optionals that look like negative numbers -- uses a list so it can be shared and edited
@@ -87,7 +94,7 @@ func (ac *ActionsContainer) Register(registryName string, value any, object any)
 }
 
 // _RegistryGet method to retrieve a value from a registry with a default
-func (ac *ActionsContainer) registryGet(registryName string, value any, defaultVal any) any {
+func (ac *ActionsContainer) RegistryGet(registryName string, value any, defaultVal any) any {
 	// Retrieve the registry by name
 	registry, exists := ac.registries[registryName]
 	if !exists {
@@ -133,24 +140,6 @@ func (ac *ActionsContainer) GetDefault(dest string) any {
 	return ac.defaults[dest]
 }
 
-// Adding argument actions
-
-type Argument struct {
-	OptionStrings []string // The command-line option strings
-	Dest          string   // The destination name where the value will be stored
-	Nargs         any      // The number of arguments to consume
-	Const         any      // The constant value for certain actions
-	Default       any      // The default value if the option is not specified
-	Type          Type     // The function to convert the string to the appropriate type
-	Choices       []any    // The valid values for this argument
-	Required      bool     // Whether the argument is required
-	Help          string   // The help description for the argument
-	Metavar       any      // The name to be used in help output
-	Deprecated    bool     // Whether the argument is deprecated
-	Action        string
-	Version       string
-}
-
 func isArgInChars(value string, chars string) bool {
 	for _, c := range chars {
 		if string(c) == value {
@@ -191,7 +180,7 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 
 	// action := ac.createAction(actionName, argument)
 
-	createAction := ac.registryGet("action", actionName, actionName)
+	createAction := ac.RegistryGet("action", actionName, actionName)
 	callback, ok := createAction.(func(*Argument) ActionInterface)
 	if !ok {
 		panic(fmt.Sprintf("action %s, result does not implement ActionInterface: %T", actionName, callback))
@@ -231,57 +220,57 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 	return ac.AddAction(action)
 }
 
-func (ac *ActionsContainer) createAction(actionName any, argument *Argument) ActionInterface {
-	// create the action object, and add it to the parser
-	createAction := ac.registryGet("action", actionName, actionName)
+// func (ac *ActionsContainer) createAction(actionName any, argument *Argument) ActionInterface {
+// 	// create the action object, and add it to the parser
+// 	createAction := ac.registryGet("action", actionName, actionName)
 
-	callbackVal := reflect.ValueOf(createAction)
-	if callbackVal.Kind() != reflect.Func {
-		panic(fmt.Sprintf("unknown action: %v: %v", actionName, createAction))
-	}
+// 	callbackVal := reflect.ValueOf(createAction)
+// 	if callbackVal.Kind() != reflect.Func {
+// 		panic(fmt.Sprintf("unknown action: %v: %v", actionName, createAction))
+// 	}
 
-	// Prepare the arguments for the function call
-	argsVals := []reflect.Value{reflect.ValueOf(argument)}
+// 	// Prepare the arguments for the function call
+// 	argsVals := []reflect.Value{reflect.ValueOf(argument)}
 
-	// Call the function with the prepared arguments
-	resultVals := callbackVal.Call(argsVals)
+// 	// Call the function with the prepared arguments
+// 	resultVals := callbackVal.Call(argsVals)
 
-	// Get the first result (assumes the function returns one value)
-	result := resultVals[0].Interface()
+// 	// Get the first result (assumes the function returns one value)
+// 	result := resultVals[0].Interface()
 
-	// Перевіряємо, чи результат реалізує інтерфейс ActionInterface
-	if action, ok := result.(ActionInterface); ok {
-		return action
-	}
+// 	// Перевіряємо, чи результат реалізує інтерфейс ActionInterface
+// 	if action, ok := result.(ActionInterface); ok {
+// 		return action
+// 	}
 
-	panic(fmt.Sprintf("result does not implement ActionInterface: %T", result))
+// 	panic(fmt.Sprintf("result does not implement ActionInterface: %T", result))
 
-	// // If result is already *Action, return it
-	// if action, ok := result.(*Action); ok {
-	// 	return action
-	// }
+// 	// // If result is already *Action, return it
+// 	// if action, ok := result.(*Action); ok {
+// 	// 	return action
+// 	// }
 
-	// // If result embeds Action (value), use reflection to find and return a pointer to it
-	// val := reflect.ValueOf(result)
-	// if val.Kind() == reflect.Ptr {
-	// 	val = val.Elem() // Dereference pointer
-	// }
+// 	// // If result embeds Action (value), use reflection to find and return a pointer to it
+// 	// val := reflect.ValueOf(result)
+// 	// if val.Kind() == reflect.Ptr {
+// 	// 	val = val.Elem() // Dereference pointer
+// 	// }
 
-	// // Search for embedded Action field
-	// for i := 0; i < val.NumField(); i++ {
-	// 	field := val.Field(i)
-	// 	if field.Type() == reflect.TypeOf(Action{}) {
-	// 		// Get a pointer to the embedded Action
-	// 		return field.Addr().Interface().(*Action)
-	// 	}
-	// }
+// 	// // Search for embedded Action field
+// 	// for i := 0; i < val.NumField(); i++ {
+// 	// 	field := val.Field(i)
+// 	// 	if field.Type() == reflect.TypeOf(Action{}) {
+// 	// 		// Get a pointer to the embedded Action
+// 	// 		return field.Addr().Interface().(*Action)
+// 	// 	}
+// 	// }
 
-	// // If no Action is found, panic
-	// panic(fmt.Sprintf("result does not embed Action: %T", result))
+// 	// // If no Action is found, panic
+// 	// panic(fmt.Sprintf("result does not embed Action: %T", result))
 
-}
+// }
 
-func (ac *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) {
+func (ac *ActionsContainer) AddArgumentGroup(argumentGroup ActionsContainerInterface) {
 	// group := NewArgumentGroup(
 	// 	a,
 	// 	kwargs["title"],
@@ -290,8 +279,8 @@ func (ac *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) 
 	// )
 }
 
-func (ac *ActionsContainer) AddMutuallyExclusiveGroup(kwargs map[string]any) {
-
+func (ac *ActionsContainer) AddMutuallyExclusiveGroup(mutuallyExclusiveGroup *MutuallyExclusiveGroup) ActionsContainerInterface {
+	return mutuallyExclusiveGroup
 }
 
 func (ac *ActionsContainer) AddAction(action ActionInterface) ActionInterface {
@@ -320,11 +309,77 @@ func (ac *ActionsContainer) AddAction(action ActionInterface) ActionInterface {
 }
 
 func (ac *ActionsContainer) RemoveAction(action *Action) {
-
+	for i, v := range ac.Actions {
+		if v == action {
+			// Remove the item by slicing the array
+			ac.Actions = append(ac.Actions[:i], ac.Actions[i+1:]...)
+		}
+	}
 }
 
 func (ac *ActionsContainer) AddContainerAction(container *ActionsContainer) {
+	titleGroupMap := make(map[string]ActionsContainerInterface)
+	for _, group := range ac.actionGroups {
+		if _, found := titleGroupMap[group.Title]; found {
+			panic(fmt.Sprintf("cannot merge actions - two groups are named %v", group.Title))
+		}
+		titleGroupMap[group.Title] = group
+	}
 
+	//  map each action to its group
+	groupMap := make(map[ActionInterface]ActionsContainerInterface)
+	for _, group := range container.actionGroups {
+		// if a group with the title exists, use that, otherwise
+		// create a new group matching the container's group
+		if _, found := titleGroupMap[group.Title]; found {
+			ac.AddArgumentGroup(
+				&ArgumentGroup{
+					Title:           group.Title,
+					Description:     group.Description,
+					ConflictHandler: group.ConflictHandler,
+				},
+			)
+		}
+
+		for _, action := range group.GroupActions {
+			groupMap[action] = titleGroupMap[group.Title]
+		}
+	}
+
+	// add container's mutually exclusive groups
+	// NOTE: if add_mutually_exclusive_group ever gains title= and
+	// description= then this code will need to be expanded as above
+	var cont ActionsContainerInterface
+	for _, group := range container.mutuallyExclusiveGroups {
+		if group.ActionsContainer == container {
+			cont = ac
+		} else {
+			cont = titleGroupMap[group.ActionsContainer.Title]
+		}
+		mutexGroup := cont.AddMutuallyExclusiveGroup(
+			&MutuallyExclusiveGroup{
+				ActionsContainer: &ActionsContainer{
+					Required: group.Required,
+				},
+			},
+		)
+
+		// map the actions to their new mutex group
+		for _, action := range group.GroupActions {
+			if _, found := groupMap[action]; found {
+				groupMap[action] = mutexGroup
+			}
+		}
+	}
+
+	// add all actions to this container or their group
+	for _, action := range container.Actions {
+		if group, found := groupMap[action]; found {
+			group.AddAction(action)
+		} else {
+			ac.AddAction(action)
+		}
+	}
 }
 
 // _get_positional_kwargs
