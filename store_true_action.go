@@ -1,25 +1,35 @@
 package argparse
 
-// StoreTrueAction represents an action that stores a constant true value in the namespace.
+import "argparse/namespace"
+
+// StoreFalseAction represents an action that stores a constant false value in the namespace.
+
 type StoreTrueAction struct {
-	StoreConstAction // Embedding StoreConstAction to reuse functionality
+	*StoreConstAction // Embed Action to inherit its behavior
 }
 
-func NewStoreTrueAction(optionStrings []string, dest string, defaultVal bool, required bool, help string, deprecated bool) (*StoreTrueAction, error) {
-	if storeConstAction, err := NewStoreConstAction(
-		optionStrings,
-		dest,
-		true,
-		defaultVal,
-		required,
-		help,
-		"",
-		deprecated,
-	); err != nil {
-		return nil, err
-	} else {
-		return &StoreTrueAction{
-			StoreConstAction: *storeConstAction,
-		}, nil
+func NewStoreTrueAction(argument *Argument) *StoreTrueAction {
+	argument.Const = true
+	storeConstAction := NewStoreConstAction(argument)
+	return &StoreTrueAction{
+		StoreConstAction: storeConstAction,
 	}
+}
+
+// Make sure StoreTrueAction implements ActionInterface
+func (a *StoreTrueAction) Self() *Action {
+	return a.StoreConstAction.Self() // Call Self() from StoreConstAction
+}
+
+func (a *StoreTrueAction) GetKwargs() map[string]any {
+	return a.StoreConstAction.GetKwargs()
+}
+
+func (a *StoreTrueAction) FormatUsage() string {
+	return a.StoreConstAction.FormatUsage()
+}
+
+func (a *StoreTrueAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+	a.StoreConstAction.Call(parser, namespace, values, optionString)
+	return nil
 }

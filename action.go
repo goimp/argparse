@@ -13,6 +13,7 @@ type ActionInterface interface {
 	GetKwargs() map[string]any
 	FormatUsage() string
 	Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error
+	Self() *Action
 }
 
 // Action represents the action associated with an argument.
@@ -30,9 +31,11 @@ type Action struct {
 	Help          string   // The help description for the argument
 	Metavar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
+
+	container any
 }
 
-func NewAction(argument *Argument) ActionInterface {
+func NewAction(argument *Argument) *Action {
 	return &Action{
 		OptionStrings: argument.OptionStrings,
 		Dest:          argument.Dest,
@@ -46,6 +49,10 @@ func NewAction(argument *Argument) ActionInterface {
 		Metavar:       argument.Metavar,
 		Deprecated:    argument.Deprecated,
 	}
+}
+
+func (a *Action) Self() *Action {
+	return a
 }
 
 // Override GetKwargs to customize keyword arguments

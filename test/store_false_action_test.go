@@ -11,18 +11,13 @@ func TestStoreFalseAction(t *testing.T) {
 
 	n := namespace.NewNamespace(map[string]any{})
 
-	a, err := argparse.NewStoreFalseAction(
-		[]string{"-f", "--foo"},
-		"foo",
-		true,
-		false,
-		"Enable verbose output",
-		false,
+	a := argparse.NewStoreFalseAction(
+		&argparse.Argument{
+			OptionStrings: []string{"-f", "--foo"},
+			Dest:          "foo",
+			Default:       "bar",
+		},
 	)
-
-	if err != nil {
-		t.Errorf("StoreFalseAction creation error: %s", err)
-	}
 
 	fmt.Printf("Kwargs: %v\n", a.GetKwargs())
 

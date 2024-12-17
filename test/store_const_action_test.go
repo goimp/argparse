@@ -11,20 +11,13 @@ func TestStoreConstAction(t *testing.T) {
 
 	n := namespace.NewNamespace(map[string]any{})
 
-	a, err := argparse.NewStoreConstAction(
-		[]string{"-f", "--foo"},
-		"foo",
-		"bar",
-		nil,
-		false,
-		"Enable verbose output",
-		"",
-		false,
+	a := argparse.NewStoreConstAction(
+		&argparse.Argument{
+			OptionStrings: []string{"-f", "--foo"},
+			Dest:          "foo",
+			Default:       "bar",
+		},
 	)
-
-	if err != nil {
-		t.Errorf("StoreConstAction creation error: %s", err)
-	}
 
 	fmt.Printf("Kwargs: %v\n", a.GetKwargs())
 

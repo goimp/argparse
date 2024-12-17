@@ -25,16 +25,14 @@ func TestStoreAction(t *testing.T) {
 
 	a.Call(nil, n, []any{1, 2, 3}, "")
 
-	ai := a.(*argparse.ActionInterface)
-
 	if value, found := n.Get("foo"); !found {
-		t.Errorf("Not found attribute %s in namespace\n", ap.Dest)
+		t.Errorf("Not found attribute %s in namespace\n", a.Dest)
 	} else {
-		fmt.Printf("%s: %v\n", ap.Dest, value)
+		fmt.Printf("%s: %v\n", a.Dest, value)
 	}
 
 	if f := a.FormatUsage(); !(f == "-f") {
-		t.Errorf("Not found attribute %s in namespace\n", ap.Dest)
+		t.Errorf("Not found attribute %s in namespace\n", a.Dest)
 	} else {
 		fmt.Printf("Format usage: %s\n", f)
 	}

@@ -5,7 +5,7 @@ import "fmt"
 type ArgumentGroup struct {
 	ActionsContainer
 	title        string
-	groupActions []*Action
+	groupActions []ActionInterface
 }
 
 func NewArgumentGroup(
@@ -13,7 +13,7 @@ func NewArgumentGroup(
 	title string,
 	description string,
 	kwargs map[string]any,
-	groupActions []*Action,
+	groupActions []ActionInterface,
 ) (*ArgumentGroup, error) {
 
 	if _, exist := kwargs["prefixChars"]; exist {
@@ -24,25 +24,21 @@ func NewArgumentGroup(
 	// kwargs["prefixChars"] = container.PrefixChars
 	// kwargs["argumentDefault"] = container.ArgumentDefault
 
-	action, err := NewActionsContainer(
+	action := NewActionsContainer(
 		description,
 		container.PrefixChars,
 		container.ArgumentDefault,
 		container.ConflictHandler,
 	)
 
-	if err != nil {
-		return nil, err
-	}
-
 	group := &ArgumentGroup{
 		ActionsContainer: *action,
 		title:            title,
-		groupActions:     []*Action{},
+		groupActions:     []ActionInterface{},
 	}
 
 	group.registries = container.registries
-	group.actions = container.actions
+	group.Actions = container.Actions
 	group.optionStringActions = container.optionStringActions
 	group.defaults = container.defaults
 	group.hasNegativeNumberOptionals = container.hasNegativeNumberOptionals
@@ -51,17 +47,18 @@ func NewArgumentGroup(
 	return group, nil
 }
 
-func (ag *ArgumentGroup) AddAction(action *Action) *Action {
-	act := *ag.ActionsContainer.AddAction(action)
-	ag.groupActions = append(ag.groupActions, &act)
-	return &act
+func (ag *ArgumentGroup) AddAction(action ActionInterface) ActionInterface {
+	act := ag.ActionsContainer.AddAction(action)
+	ag.groupActions = append(ag.groupActions, act)
+	return act
 }
 
 func (ag *ArgumentGroup) RemoveAction(dest string) error {
-	for i, action := range ag.actions {
+	for i, actionInterface := range ag.Actions {
+		action := actionInterface.Self()
 		if action.Dest == dest {
 			// Remove the action by appending slices before and after the index
-			ag.actions = append(ag.actions[:i], ag.actions[i+1:]...)
+			ag.Actions = append(ag.Actions[:i], ag.Actions[i+1:]...)
 			return nil // Action removed successfully
 		}
 	}

@@ -11,7 +11,7 @@ func TestBooleanAction(t *testing.T) {
 
 	n := namespace.NewNamespace(map[string]any{})
 
-	a, err := argparse.NewBooleanOptionalAction(
+	a := argparse.NewBooleanOptionalAction(
 		[]string{"-v", "--verbose"},
 		"verbose",
 		nil,
@@ -19,10 +19,6 @@ func TestBooleanAction(t *testing.T) {
 		"Enable verbose output",
 		false,
 	)
-
-	if err != nil {
-		t.Errorf("BooleanOptionalAction creation error: %s", err)
-	}
 
 	fmt.Printf("Kwargs: %v\n", a.GetKwargs())
 

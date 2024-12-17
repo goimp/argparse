@@ -2,6 +2,7 @@ package argparse
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -15,13 +16,13 @@ type ActionsContainer struct {
 	ArgumentDefault            any
 	ConflictHandler            any
 	registries                 Registries
-	actions                    []Action
-	optionStringActions        map[any]any
+	Actions                    []ActionInterface
+	optionStringActions        map[string]any
 	actionGroups               []any
 	mutuallyExclusiveGroups    []any
 	defaults                   map[string]any
 	negativeNumberMatcher      *regexp.Regexp
-	hasNegativeNumberOptionals []any
+	hasNegativeNumberOptionals []bool
 
 	getFormatter any
 }
@@ -38,14 +39,14 @@ func NewActionsContainer(
 		PrefixChars:                prefixChars,
 		ArgumentDefault:            argumentDefault,
 		ConflictHandler:            conflictHandler,
-		registries:                 make(Registries), // set up registries
-		actions:                    []Action{},       // action storage
-		optionStringActions:        make(map[any]any),
+		registries:                 make(Registries),    // set up registries
+		Actions:                    []ActionInterface{}, // action storage
+		optionStringActions:        make(map[string]any),
 		actionGroups:               []any{}, // groups
 		mutuallyExclusiveGroups:    []any{},
 		defaults:                   make(map[string]any),            // defaults storage
 		negativeNumberMatcher:      regexp.MustCompile(`-\.?(\d+)`), // determines whether an "option" looks like a negative number
-		hasNegativeNumberOptionals: []any{},                         // # whether or not there are any optionals that look like negative numbers -- uses a list so it can be shared and edited
+		hasNegativeNumberOptionals: []bool{},                        // # whether or not there are any optionals that look like negative numbers -- uses a list so it can be shared and edited
 	}
 
 	// register actions
@@ -112,16 +113,18 @@ func (ac *ActionsContainer) SetDefaults(kwargs map[string]any) {
 	}
 
 	// Update the default value of actions that match the keys in kwargs
-	for i := range ac.actions {
-		if defaultValue, exists := kwargs[ac.actions[i].Dest]; exists {
-			ac.actions[i].Default = defaultValue
+	for _, actionInterface := range ac.Actions {
+		action := actionInterface.Self()
+		if defaultValue, exists := kwargs[action.Dest]; exists {
+			action.Default = defaultValue
 		}
 	}
 }
 
 func (ac *ActionsContainer) GetDefault(dest string) any {
 	// Iterate over actions to find a matching dest with a non-nil default value
-	for _, action := range ac.actions {
+	for _, actionInterface := range ac.Actions {
+		action := actionInterface.Self()
 		if action.Dest == dest && action.Default != nil {
 			return action.Default
 		}
@@ -182,34 +185,37 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) any {
 		}
 	}
 
-	// create the action object, and add it to the parser
-	actionName := argument.Action
-	newActionFunc := ac.registryGet("action", actionName, actionName)
-
 	// Check if the registry value is of type NewActionFuncType and invoke it
-	var action *Action
-	if createAction, ok := newActionFunc.(func(*Argument) *Action); ok {
-		action = createAction(argument)
-		// if action, ok = createAction(argument).(*Action); !ok {
-		// 	panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
-		// }
-	} else {
-		panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
-	}
+	actionName := argument.Action
+
+	action := ac.createAction(actionName, argument)
+
+	// fmt.Println(a)
+	// var action *Action
+
+	// if createAction, ok := newActionFunc.(func(*Argument) *Action); ok {
+	// 	action = createAction(argument)
+	// 	// if action, ok = createAction(argument).(*Action); !ok {
+	// 	// 	panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
+	// 	// }
+	// } else {
+	// 	panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
+	// }
 
 	// raise an error if action for positional argument does not consume arguments
-	if action.OptionStrings == nil {
-		if nargs, ok := action.Nargs.(int); ok && nargs == 0 {
+	if action.Self().OptionStrings == nil {
+		if nargs, ok := action.Self().Nargs.(int); ok && nargs == 0 {
 			panic(fmt.Sprintf("action %v is not valid for positional arguments", actionName))
 		}
 	}
 
-	// raise an error if the action type is not callable
-	var actionValueType = ac.registryGet("type", action.Type, action.Type)
+	// FIXME: not done
+	// // raise an error if the action type is not callable
+	// var actionValueType = ac.registryGet("type", action.Type, action.Type)
 
-	if typeFunc, ok := actionValueType.(TypeFunc); !ok {
-		panic(fmt.Sprintf("%v is not TypeFunc", typeFunc))
-	}
+	// if typeFunc, ok := actionValueType.(TypeFunc); !ok {
+	// 	panic(fmt.Sprintf("%v is not TypeFunc", typeFunc))
+	// }
 
 	// FIXME: not done
 	// if _, ok = actionValueType.(FileType); ok {
@@ -229,6 +235,56 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) any {
 	return ac.AddAction(action)
 }
 
+func (ac *ActionsContainer) createAction(actionName any, argument *Argument) ActionInterface {
+	// create the action object, and add it to the parser
+	createAction := ac.registryGet("action", actionName, actionName)
+
+	callbackVal := reflect.ValueOf(createAction)
+	if callbackVal.Kind() != reflect.Func {
+		panic(fmt.Sprintf("unknown action: %v: %v", actionName, createAction))
+	}
+
+	// Prepare the arguments for the function call
+	argsVals := []reflect.Value{reflect.ValueOf(argument)}
+
+	// Call the function with the prepared arguments
+	resultVals := callbackVal.Call(argsVals)
+
+	// Get the first result (assumes the function returns one value)
+	result := resultVals[0].Interface()
+
+	// Перевіряємо, чи результат реалізує інтерфейс ActionInterface
+	if action, ok := result.(ActionInterface); ok {
+		return action
+	}
+
+	panic(fmt.Sprintf("result does not implement ActionInterface: %T", result))
+
+	// // If result is already *Action, return it
+	// if action, ok := result.(*Action); ok {
+	// 	return action
+	// }
+
+	// // If result embeds Action (value), use reflection to find and return a pointer to it
+	// val := reflect.ValueOf(result)
+	// if val.Kind() == reflect.Ptr {
+	// 	val = val.Elem() // Dereference pointer
+	// }
+
+	// // Search for embedded Action field
+	// for i := 0; i < val.NumField(); i++ {
+	// 	field := val.Field(i)
+	// 	if field.Type() == reflect.TypeOf(Action{}) {
+	// 		// Get a pointer to the embedded Action
+	// 		return field.Addr().Interface().(*Action)
+	// 	}
+	// }
+
+	// // If no Action is found, panic
+	// panic(fmt.Sprintf("result does not embed Action: %T", result))
+
+}
+
 func (ac *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) {
 	// group := NewArgumentGroup(
 	// 	a,
@@ -242,8 +298,29 @@ func (ac *ActionsContainer) AddMutuallyExclusiveGroup(kwargs map[string]any) {
 
 }
 
-func (ac *ActionsContainer) AddAction(action *Action) *Action {
-	return &Action{}
+func (ac *ActionsContainer) AddAction(action ActionInterface) ActionInterface {
+	// resolve any conflicts
+	ac.CheckConflict(action)
+
+	// add to actions list
+	ac.Actions = append(ac.Actions, action)
+	action.Self().container = ac
+
+	// index the action by any option strings it has
+	for _, optionString := range action.Self().OptionStrings {
+		ac.optionStringActions[optionString] = action
+	}
+
+	// set the flag if any option strings look like negative numbers
+	for _, optionString := range action.Self().OptionStrings {
+		if ac.negativeNumberMatcher.MatchString(optionString) {
+			if len(ac.hasNegativeNumberOptionals) == 0 {
+				ac.hasNegativeNumberOptionals = append(ac.hasNegativeNumberOptionals, true)
+			}
+		}
+	}
+	// return the created action
+	return action
 }
 
 func (ac *ActionsContainer) RemoveAction(action *Action) {
@@ -334,7 +411,7 @@ func (ac *ActionsContainer) GetHandler() (func(), error) {
 	}
 }
 
-func (ac *ActionsContainer) CheckConflict(action *Action) {
+func (ac *ActionsContainer) CheckConflict(action ActionInterface) {
 
 }
 
@@ -346,6 +423,6 @@ func (ac *ActionsContainer) HandleConflictResolve(action *Action, conflictingAct
 
 }
 
-func (ac *ActionsContainer) CheckHelp(action *Action) {
-	// if action.Help
+func (ac *ActionsContainer) CheckHelp(action ActionInterface) {
+
 }

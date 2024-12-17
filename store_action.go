@@ -48,11 +48,3 @@ func (a *StoreAction) Call(parser *ArgumentParser, namespace *namespace.Namespac
 	namespace.Set(a.Dest, values)
 	return nil
 }
-
-func (a *StoreAction) FormatUsage() string {
-	return a.Action.FormatUsage()
-}
-
-func (a *StoreAction) GetKwargs() map[string]any {
-	return a.Action.GetKwargs()
-}

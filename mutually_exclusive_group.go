@@ -6,21 +6,17 @@ type MutuallyExclusiveGroup struct {
 
 func NewMutuallyExclusiveGroup(
 	description string,
-	prefixChars []string,
+	prefixChars string,
 	argumentDefault any,
 	conflictHandler any,
 ) (*MutuallyExclusiveGroup, error) {
 
-	actions_container, error := NewActionsContainer(
+	actions_container := NewActionsContainer(
 		description,
 		prefixChars,
 		argumentDefault,
 		conflictHandler,
 	)
-
-	if error != nil {
-		return nil, error
-	}
 
 	return &MutuallyExclusiveGroup{
 		ActionsContainer: *actions_container,

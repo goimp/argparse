@@ -12,7 +12,7 @@ type BooleanOptionalAction struct {
 }
 
 // NewBooleanOptionalAction creates a new BooleanOptionalAction object.
-func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal any, required bool, help string, deprecated bool) (*BooleanOptionalAction, error) {
+func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal any, required bool, help string, deprecated bool) *BooleanOptionalAction {
 	// Validate and process option strings
 	var _optionStrings []string
 
@@ -21,7 +21,7 @@ func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal an
 
 		if strings.HasPrefix(optionString, "--") {
 			if strings.HasPrefix(optionString, "--no-") {
-				return nil, fmt.Errorf("invalid option name %q for BooleanOptionalAction", optionString)
+				panic(fmt.Errorf("invalid option name %q for BooleanOptionalAction", optionString))
 			}
 			optionString = "--no-" + optionString[2:]
 			_optionStrings = append(_optionStrings, optionString)
@@ -38,17 +38,18 @@ func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal an
 		Deprecated:    deprecated,
 	}
 
-	return &BooleanOptionalAction{Action: action}, nil
+	return &BooleanOptionalAction{Action: action}
 }
 
 // Call executes the action when the option is encountered on the command line.
-func (a *BooleanOptionalAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
+func (a *BooleanOptionalAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
 	for _, _optionString := range a.OptionStrings {
 		if _optionString == optionString {
 			namespace.Set(a.Dest, !strings.HasPrefix(_optionString, "--no-"))
 			break
 		}
 	}
+	return nil
 }
 
 // FormatUsage formats the usage for the action, combining the option strings with a separator.
