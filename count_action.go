@@ -6,45 +6,29 @@ import (
 
 // CountAction represents an action that counts the occurrences of a command-line option.
 type CountAction struct {
-	Action // Embedding Action to reuse functionality
+	*Action // Embedding Action to reuse functionality
 }
 
 // NewCountAction creates a new CountAction.
-func NewCountAction(
-	optionStrings []string,
-	dest string,
-	defaultVal any,
-	required bool,
-	help string,
-	deprecated bool,
-) (*CountAction, error) {
+func NewCountAction(argument *Argument) *CountAction {
 	return &CountAction{
-		Action: Action{
-			OptionStrings: optionStrings,
-			Dest:          dest,
+		Action: &Action{
+			OptionStrings: argument.OptionStrings,
+			Dest:          argument.Dest,
 			Nargs:         0,
-			Default:       defaultVal,
-			Required:      required,
-			Help:          help,
-			Deprecated:    deprecated,
+			Default:       argument.Default,
+			Required:      argument.Required,
+			Help:          argument.Help,
+			Deprecated:    argument.Deprecated,
 		},
-	}, nil
+	}
 }
 
-func (a *CountAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
+func (a *CountAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
 	count, found := namespace.Get(a.Dest)
 	if !found || count == nil {
 		count = 0
 	}
 	namespace.Set(a.Dest, count.(int)+1)
+	return nil
 }
-
-// func (a *CountAction) Call(parser any, namespace *namespace.Namespace, values any, optionString string) {
-// 	var count int
-// 	if c, found := namespace.Get(a.Dest); found {
-// 		if castCount, ok := c.(int); ok {
-// 			count = castCount
-// 		}
-// 	}
-// 	namespace.Set(a.Dest, count+1)
-// }

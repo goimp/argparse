@@ -2,8 +2,7 @@ package argparse
 
 import "argparse/namespace"
 
-// StoreFalseAction represents an action that stores a constant false value in the namespace.
-
+// StoreTrueAction represents an action that stores a constant true value in the namespace.
 type StoreTrueAction struct {
 	*StoreConstAction // Embed Action to inherit its behavior
 }

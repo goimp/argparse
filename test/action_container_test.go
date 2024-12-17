@@ -52,6 +52,22 @@ func TestActionsContainer(t *testing.T) {
 		},
 	)
 
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"-c", "-const"},
+			Action:        "store_const",
+			Dest:          "constant",
+		},
+	)
+
+	container.AddArgument(
+		&argparse.Argument{
+			OptionStrings: []string{"--counter"},
+			Action:        "count",
+			Dest:          "counter",
+		},
+	)
+
 	for _, actIntf := range container.Actions {
 		fmt.Println(reflect.TypeOf(actIntf))
 		prettyPrintMap(actIntf.GetKwargs())
