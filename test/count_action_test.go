@@ -6,7 +6,7 @@ import (
 
 func TestCountAction(t *testing.T) {
 
-	// n := namespace.NewNamespace(map[string]any{
+	// n := argparse.NewNamespace(map[string]any{
 	// 	// "foo": 1,
 	// })
 

@@ -1,9 +1,5 @@
 package argparse
 
-import (
-	"argparse/namespace"
-)
-
 // HelpAction represents an action that displays the help message.
 type HelpAction struct {
 	Action
@@ -43,7 +39,7 @@ func NewHelpAction(
 }
 
 // SetValue prints the help message and exits the program.
-func (a *HelpAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
+func (a *HelpAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) {
 	if parser != nil {
 		parser.PrintHelp(nil)
 		parser.Exit(0, "")

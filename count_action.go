@@ -1,9 +1,5 @@
 package argparse
 
-import (
-	"argparse/namespace"
-)
-
 // CountAction represents an action that counts the occurrences of a command-line option.
 type CountAction struct {
 	*Action // Embedding Action to reuse functionality
@@ -24,7 +20,7 @@ func NewCountAction(argument *Argument) *CountAction {
 	}
 }
 
-func (a *CountAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *CountAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	count, found := namespace.Get(a.Dest)
 	if !found || count == nil {
 		count = 0

@@ -2,7 +2,6 @@ package argparse
 
 import (
 	"argparse/attribute_holder" // Import the AttributeHolder package
-	"argparse/namespace"        // Import the AttributeHolder package
 )
 
 type Type = any
@@ -12,7 +11,7 @@ type NewActionFuncType = func(*Argument) *Action
 type ActionInterface interface {
 	GetKwargs() map[string]any
 	FormatUsage() string
-	Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error
+	Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error
 	Self() *Action
 }
 
@@ -81,6 +80,6 @@ func (a *Action) FormatUsage() string {
 }
 
 // Call simulates the action being triggered (not implemented here, as per Python's version).
-func (a *Action) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *Action) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	panic("action.Call() not implemented")
 }

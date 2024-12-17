@@ -1,7 +1,5 @@
 package argparse
 
-import "argparse/namespace"
-
 // StoreFalseAction represents an action that stores a constant false value in the namespace.
 
 type StoreFalseAction struct {
@@ -29,7 +27,7 @@ func (a *StoreFalseAction) FormatUsage() string {
 	return a.StoreConstAction.FormatUsage()
 }
 
-func (a *StoreFalseAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *StoreFalseAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	a.StoreConstAction.Call(parser, namespace, values, optionString)
 	return nil
 }

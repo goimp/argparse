@@ -1,7 +1,5 @@
 package argparse
 
-import "argparse/namespace"
-
 // StoreConstAction represents an action that stores a constant value in the namespace.
 type StoreConstAction struct {
 	*Action // Embed Action to inherit its behavior
@@ -41,7 +39,7 @@ func NewStoreConstAction(argument *Argument) *StoreConstAction {
 // }
 
 // Call assigns the provided values to the destination field in the namespace.
-func (a *StoreConstAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *StoreConstAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	namespace.Set(a.Dest, a.Const)
 	return nil
 }

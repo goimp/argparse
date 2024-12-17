@@ -2,14 +2,13 @@ package argparse_test
 
 import (
 	"argparse"
-	"argparse/namespace"
 	"fmt"
 	"testing"
 )
 
 func TestStoreTrueAction(t *testing.T) {
 
-	n := namespace.NewNamespace(map[string]any{})
+	n := argparse.NewNamespace(map[string]any{})
 
 	a := argparse.NewStoreTrueAction(
 		&argparse.Argument{

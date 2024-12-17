@@ -2,7 +2,6 @@ package argparse
 
 import (
 	"argparse/copy_items"
-	"argparse/namespace"
 )
 
 // ExtendAction represents an action that displays the version information.
@@ -46,7 +45,7 @@ func NewExtendAction(
 }
 
 // SetValue prints the version information and exits the program.
-func (a *ExtendAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values []any, optionString string) {
+func (a *ExtendAction) Call(parser *ArgumentParser, namespace *Namespace, values []any, optionString string) {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}

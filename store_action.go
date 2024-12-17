@@ -1,7 +1,6 @@
 package argparse
 
 import (
-	"argparse/namespace"
 	"fmt"
 )
 
@@ -44,7 +43,7 @@ func NewStoreAction(argument *Argument) *StoreAction {
 }
 
 // Call assigns the provided values to the destination field in the namespace.
-func (a *StoreAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *StoreAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	namespace.Set(a.Dest, values)
 	return nil
 }

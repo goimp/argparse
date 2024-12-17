@@ -1,7 +1,6 @@
 package argparse
 
 import (
-	"argparse/namespace"
 	"fmt"
 	"strings"
 )
@@ -42,7 +41,7 @@ func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal an
 }
 
 // Call executes the action when the option is encountered on the command line.
-func (a *BooleanOptionalAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *BooleanOptionalAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	for _, _optionString := range a.OptionStrings {
 		if _optionString == optionString {
 			namespace.Set(a.Dest, !strings.HasPrefix(_optionString, "--no-"))

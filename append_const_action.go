@@ -2,7 +2,6 @@ package argparse
 
 import (
 	"argparse/copy_items"
-	"argparse/namespace"
 )
 
 // AppendConstAction represents an action that appends a constant value to a slice.
@@ -36,7 +35,7 @@ func NewAppendConstAction(
 	}, nil
 }
 
-func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
+func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}

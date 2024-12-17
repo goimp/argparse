@@ -1,7 +1,5 @@
 package argparse
 
-import "argparse/namespace"
-
 // StoreTrueAction represents an action that stores a constant true value in the namespace.
 type StoreTrueAction struct {
 	*StoreConstAction // Embed Action to inherit its behavior
@@ -28,7 +26,7 @@ func (a *StoreTrueAction) FormatUsage() string {
 	return a.StoreConstAction.FormatUsage()
 }
 
-func (a *StoreTrueAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error {
+func (a *StoreTrueAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	a.StoreConstAction.Call(parser, namespace, values, optionString)
 	return nil
 }

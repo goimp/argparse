@@ -2,7 +2,6 @@ package argparse
 
 import (
 	"argparse/attribute_holder"
-	"argparse/namespace"
 	"os"
 )
 
@@ -43,19 +42,19 @@ func (ap *ArgumentParser) GetPositionalActions() []*Action {
 
 // Command line argument parsing methods
 
-func (ap *ArgumentParser) ParseArgs(args []any, namespace *namespace.Namespace) []any {
+func (ap *ArgumentParser) ParseArgs(args []any, namespace *Namespace) []any {
 	return []any{}
 }
 
-func (ap *ArgumentParser) ParseKnownArgs(args []any, namespace *namespace.Namespace) []any {
+func (ap *ArgumentParser) ParseKnownArgs(args []any, namespace *Namespace) []any {
 	return []any{}
 }
 
-func (ap *ArgumentParser) ParseKnownArgs2(args []any, namespace *namespace.Namespace, intermixed any) {
+func (ap *ArgumentParser) ParseKnownArgs2(args []any, namespace *Namespace, intermixed any) {
 
 }
 
-func (ap *ArgumentParser) parseKnownArgs(args []any, namespace *namespace.Namespace, intermixed any) {
+func (ap *ArgumentParser) parseKnownArgs(args []any, namespace *Namespace, intermixed any) {
 
 }
 

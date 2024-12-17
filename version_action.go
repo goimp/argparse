@@ -1,7 +1,6 @@
 package argparse
 
 import (
-	"argparse/namespace"
 	"fmt"
 	"os"
 )
@@ -35,7 +34,7 @@ func NewVersionAction(
 }
 
 // SetValue prints the version information and exits the program.
-func (a *VersionAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) {
+func (a *VersionAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) {
 	if parser != nil {
 		// Print the version information
 		// version := a.Version

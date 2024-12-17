@@ -1,4 +1,4 @@
-package namespace
+package argparse
 
 import (
 	"argparse/attribute_holder"

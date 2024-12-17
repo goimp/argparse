@@ -2,7 +2,6 @@ package argparse_test
 
 import (
 	"argparse"
-	"argparse/namespace"
 	"fmt"
 	"reflect"
 	"testing"
@@ -10,7 +9,7 @@ import (
 
 func TestAppendConstAction(t *testing.T) {
 
-	n := namespace.NewNamespace(map[string]any{
+	n := argparse.NewNamespace(map[string]any{
 		"foo": []any{"bar"},
 	})
 

@@ -2,7 +2,6 @@ package argparse
 
 import (
 	"argparse/copy_items"
-	"argparse/namespace"
 	"fmt"
 )
 
@@ -60,7 +59,7 @@ func NewAppendAction(
 	}, nil
 }
 
-func (a *AppendAction) Call(parser *ArgumentParser, namespace *namespace.Namespace, values []any, optionString string) {
+func (a *AppendAction) Call(parser *ArgumentParser, namespace *Namespace, values []any, optionString string) {
 	items, found := namespace.Get(a.Dest)
 	if !found {
 		items = []any{}
