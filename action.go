@@ -7,6 +7,13 @@ import (
 
 type Type = any
 type TypeFunc = func(string) (any, error)
+type NewActionFuncType = func(*Argument) *Action
+
+type ActionInterface interface {
+	GetKwargs() map[string]any
+	FormatUsage() string
+	Call(parser *ArgumentParser, namespace *namespace.Namespace, values any, optionString string) error
+}
 
 // Action represents the action associated with an argument.
 type Action struct {
@@ -25,39 +32,21 @@ type Action struct {
 	Deprecated    bool     // Whether the argument is deprecated
 }
 
-func NewAction(
-	optionStrings []string,
-	dest string,
-	nargs any,
-	constVal any,
-	defaultVal any,
-	typ Type,
-	choices []any,
-	required bool,
-	help string,
-	metavar string,
-	deprecated bool,
-) (*Action, error) {
+func NewAction(argument *Argument) ActionInterface {
 	return &Action{
-		OptionStrings: optionStrings,
-		Dest:          dest,
-		Nargs:         nargs,
-		Const:         constVal,
-		Default:       defaultVal,
-		Type:          typ,
-		Choices:       choices,
-		Required:      required,
-		Help:          help,
-		Metavar:       metavar,
-		Deprecated:    deprecated,
-	}, nil
+		OptionStrings: argument.OptionStrings,
+		Dest:          argument.Dest,
+		Nargs:         argument.Nargs,
+		Const:         argument.Const,
+		Default:       argument.Default,
+		Type:          argument.Type,
+		Choices:       argument.Choices,
+		Required:      argument.Required,
+		Help:          argument.Help,
+		Metavar:       argument.Metavar,
+		Deprecated:    argument.Deprecated,
+	}
 }
-
-// // Override GetArgs if needed
-// func (a *Action) GetArgs() []string {
-// 	// Example: No positional arguments for now
-// 	return []string{}
-// }
 
 // Override GetKwargs to customize keyword arguments
 func (a *Action) GetKwargs() map[string]any {

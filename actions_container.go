@@ -3,14 +3,18 @@ package argparse
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
+
+type Registry = map[any]any
+type Registries = map[string]Registry
 
 type ActionsContainer struct {
 	Description                string
-	PrefixChars                []string
+	PrefixChars                string
 	ArgumentDefault            any
 	ConflictHandler            any
-	registries                 map[string]any
+	registries                 Registries
 	actions                    []Action
 	optionStringActions        map[any]any
 	actionGroups               []any
@@ -18,22 +22,24 @@ type ActionsContainer struct {
 	defaults                   map[string]any
 	negativeNumberMatcher      *regexp.Regexp
 	hasNegativeNumberOptionals []any
+
+	getFormatter any
 }
 
 func NewActionsContainer(
 	description string,
-	prefixChars []string,
+	prefixChars string,
 	argumentDefault any,
 	conflictHandler any,
-) (*ActionsContainer, error) {
+) *ActionsContainer {
 
 	container := &ActionsContainer{
 		Description:                description,
 		PrefixChars:                prefixChars,
 		ArgumentDefault:            argumentDefault,
 		ConflictHandler:            conflictHandler,
-		registries:                 make(map[string]any), // set up registries
-		actions:                    []Action{},           // action storage
+		registries:                 make(Registries), // set up registries
+		actions:                    []Action{},       // action storage
 		optionStringActions:        make(map[any]any),
 		actionGroups:               []any{}, // groups
 		mutuallyExclusiveGroups:    []any{},
@@ -61,47 +67,39 @@ func NewActionsContainer(
 
 	// action storage
 
-	return container, nil
+	return container
 }
 
 // Registration methods
 
-func (ac *ActionsContainer) Register(registryName string, value string, object any) {
-	// Check if the registry exists
+// Register method to add a value to the registry in ActionsContainer
+func (ac *ActionsContainer) Register(registryName string, value any, object any) {
+	// Set default registry if it doesn't exist
 	registry, exists := ac.registries[registryName]
-
 	if !exists {
-		// Initialize the registry as a map[any]any
-		registry = make(map[string]any)
+		registry = make(Registry)
 		ac.registries[registryName] = registry
 	}
 
-	// Perform a type assertion to ensure registry is map[any]any
-	if regMap, ok := registry.(map[string]any); ok {
-		// Add the value-object pair to the registry
-		regMap[value] = object
-	} else {
-		panic(fmt.Sprintf("registry %s is not of type map[any]any", registryName))
-	}
+	// Add the value-object pair to the registry
+	registry[value] = object
 }
 
-func (ac *ActionsContainer) RegistryGet(registryName string, value any, defaultValue any) any {
-	// Check if the registry exists
+// _RegistryGet method to retrieve a value from a registry with a default
+func (ac *ActionsContainer) registryGet(registryName string, value any, defaultVal any) any {
+	// Retrieve the registry by name
 	registry, exists := ac.registries[registryName]
 	if !exists {
-		return defaultValue // Return the default value if the registry doesn't exist
+		return defaultVal // Return default value if registry doesn't exist
 	}
 
-	// Perform a type assertion to ensure registry is map[any]any
-	if regMap, ok := registry.(map[any]any); ok {
-		// Try to get the value from the registry
-		if obj, found := regMap[value]; found {
-			return obj // Return the value if found
-		}
+	// Retrieve the value from the registry
+	if result, found := registry[value]; found {
+		return result // Return the value if found
 	}
 
-	// Return the default value if the key doesn't exist or the registry is invalid
-	return defaultValue
+	// Return the default value if the value is not found
+	return defaultVal
 }
 
 // Namespace default accessor methods
@@ -146,17 +144,89 @@ type Argument struct {
 	Help          string   // The help description for the argument
 	Metavar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
+	Action        string
 }
 
-func (ac *ActionsContainer) AddArgument(argument Argument) (any, error) {
-	// chars := ac.PrefixChars
+func isArgInChars(value string, chars string) bool {
+	for _, c := range chars {
+		if string(c) == value {
+			return true
+		}
+	}
+	return false
+}
 
-	// if argument.OptionStrings != nil || len(argument.OptionStrings) == 1 {
+func (ac *ActionsContainer) AddArgument(argument *Argument) any {
+	chars := ac.PrefixChars
+	args := argument.OptionStrings
 
+	// Check if args are empty or not of a valid prefix
+	if args == nil || (len(args) == 1) && !isArgInChars(args[0][:1], chars) {
+		// Handle positional arguments
+		if argument.Dest != "" {
+			panic("Dest supplied twice for positional argument, did you mean Metavar")
+		}
+		argument = ac.getPositionalArgument(argument)
+	} else {
+		// Handle optional arguments
+		argument = ac.getOptionalArgument(argument)
+	}
+
+	// if no default was supplied, use the parser-level default
+	if argument.Default == nil {
+		dest := argument.Dest
+		if _, exist := ac.defaults[dest]; exist {
+			argument.Default = ac.defaults[dest]
+		} else if ac.ArgumentDefault != nil {
+			argument.Default = ac.ArgumentDefault
+		}
+	}
+
+	// create the action object, and add it to the parser
+	actionName := argument.Action
+	newActionFunc := ac.registryGet("action", actionName, actionName)
+
+	// Check if the registry value is of type NewActionFuncType and invoke it
+	var action *Action
+	if createAction, ok := newActionFunc.(func(*Argument) *Action); ok {
+		action = createAction(argument)
+		// if action, ok = createAction(argument).(*Action); !ok {
+		// 	panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
+		// }
+	} else {
+		panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
+	}
+
+	// raise an error if action for positional argument does not consume arguments
+	if action.OptionStrings == nil {
+		if nargs, ok := action.Nargs.(int); ok && nargs == 0 {
+			panic(fmt.Sprintf("action %v is not valid for positional arguments", actionName))
+		}
+	}
+
+	// raise an error if the action type is not callable
+	var actionValueType = ac.registryGet("type", action.Type, action.Type)
+
+	if typeFunc, ok := actionValueType.(TypeFunc); !ok {
+		panic(fmt.Sprintf("%v is not TypeFunc", typeFunc))
+	}
+
+	// FIXME: not done
+	// if _, ok = actionValueType.(FileType); ok {
+	// 	panic(fmt.Sprintf("%v is a FileType, instance of it must be passed", typeFunc))
 	// }
 
-	// kwargs := ac.GetPositionalKwargs(argument)
-	return nil, nil
+	// FIXME: not done
+	// // raise an error if the metavar does not match the type
+	// if ac.getFormatter != nil {
+	// 	formatter := ac.getFormatter.(FormatterFunc)()
+	// 	if err := formatter.formatArgs(action, nil); err {
+	// 		panic("length of metavar tuple does not match nargs")
+	// 	}
+	// }
+	ac.CheckHelp(action)
+
+	return ac.AddAction(action)
 }
 
 func (ac *ActionsContainer) AddArgumentGroup(args []any, kwargs map[string]any) {
@@ -184,16 +254,69 @@ func (ac *ActionsContainer) AddContainerAction(container *ActionsContainer) {
 
 }
 
-func (ac *ActionsContainer) GetPositionalKwargs(argument *Argument) {
+// _get_positional_kwargs
+func (ac *ActionsContainer) getPositionalArgument(argument *Argument) *Argument {
+	// make sure required is not specified
+	if argument.Required {
+		panic("'Required' is an invalid argument for positionals")
+	}
 
+	// mark positional arguments as required if at least one is
+	// always required
+	nargs := argument.Nargs
+	switch t := nargs.(type) {
+	case int:
+		if t == 0 { // `t` is the asserted int value
+			panic("nargs for positionals must be != 0")
+		}
+	case string:
+		if t != OPTIONAL && t != ZERO_OR_MORE && t != REMAINDER && t != SUPPRESS {
+			argument.Required = true
+		}
+	}
+
+	// return the keyword arguments with no option strings
+	argument.OptionStrings = []string{}
+	return argument
 }
 
-func (ac *ActionsContainer) GetOptionalKwargs(args []any, kwargs map[string]any) {
+// _get_optional_kwargs
+func (ac *ActionsContainer) getOptionalArgument(argument *Argument) *Argument {
+	optionStrings := []string{}
+	longOptionStrings := []string{}
+	for _, optionString := range argument.OptionStrings {
+		if !isArgInChars(optionString[:1], ac.PrefixChars) {
+			panic(fmt.Sprintf("invalid option string %v: must start with a character %s", optionString, ac.PrefixChars))
+		}
 
-}
+		// strings starting with two prefix characters are long options
+		optionStrings = append(optionStrings, optionString)
+		if len(optionString) > 1 && isArgInChars(optionString[1:2], ac.PrefixChars) {
+			longOptionStrings = append(longOptionStrings, optionString)
+		}
+	}
 
-func (ac *ActionsContainer) PopActionClass(kwargs map[string]any, defaultAction *Action) {
+	// infer destination, '--foo-bar' -> 'foo_bar' and '-x' -> 'x'
+	dest := argument.Dest
+	var destOptionString string
 
+	if dest == "" {
+		if len(longOptionStrings) > 1 {
+			destOptionString = longOptionStrings[0]
+		} else {
+			destOptionString = optionStrings[0]
+		}
+		dest = strings.TrimLeft(destOptionString, ac.PrefixChars)
+		if dest == "" {
+			panic(fmt.Sprintf("dest= is required for options like %v", optionStrings))
+		}
+		dest = strings.ReplaceAll(dest, "-", "_")
+	}
+
+	// return the updated argument
+	argument.Dest = dest
+	argument.OptionStrings = optionStrings
+	return argument
 }
 
 func (ac *ActionsContainer) GetHandler() (func(), error) {

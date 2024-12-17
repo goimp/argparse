@@ -29,6 +29,8 @@ func NewHelpFormatter(prog string, indentIncrement, maxHelpPosition, width int) 
 		width = getTerminalWidth() - 2
 	}
 
+	// indentIncrement = 2 //
+
 	// Ensure maxHelpPosition is not too large
 	maxHelpPosition = min(maxHelpPosition, max(width-20, indentIncrement*2))
 
@@ -93,6 +95,10 @@ func (hf *HelpFormatter) dedent() {
 		panic("Indent decreased below 0.")
 	}
 	hf.Level--
+}
+
+func (hf *HelpFormatter) addItem(funcToAdd func(args ...interface{}) string, args ...interface{}) {
+	hf.CurrentSection.AddItem(funcToAdd, args)
 }
 
 // ========================

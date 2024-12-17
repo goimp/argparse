@@ -104,7 +104,7 @@ func (p *SubParsersAction) AddParser(name string, deprecated bool, kwargs map[st
 	if help, exist := kwargs["help"]; exist {
 		switch t := help.(type) {
 		case string:
-			choiceAction = NewChoicesPseudoAction(name, aliasesLi, help.(string))
+			choiceAction = NewChoicesPseudoAction(name, aliasesLi, t)
 		default:
 			return nil, fmt.Errorf("wrong help type for action: %s, %v", name, t)
 		}
@@ -182,8 +182,7 @@ func (p *SubParsersAction) Call(parser *ArgumentParser, namespace namespace.Name
 		} else {
 			switch t := unrec.(type) {
 			case []any:
-				newUnrec := unrec.([]any)
-				newUnrec = append(newUnrec, argStrings)
+				newUnrec := append(t, argStrings)
 				namespace.Set(UNRECOGNIZED_ARGS_ATTR, newUnrec)
 			default:
 				fmt.Printf("Wrong unrec type %v\n", t)
