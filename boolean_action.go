@@ -11,11 +11,11 @@ type BooleanOptionalAction struct {
 }
 
 // NewBooleanOptionalAction creates a new BooleanOptionalAction object.
-func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal any, required bool, help string, deprecated bool) *BooleanOptionalAction {
+func NewBooleanOptionalAction(argument *Argument) ActionInterface {
 	// Validate and process option strings
 	var _optionStrings []string
 
-	for _, optionString := range optionStrings {
+	for _, optionString := range argument.OptionStrings {
 		_optionStrings = append(_optionStrings, optionString)
 
 		if strings.HasPrefix(optionString, "--") {
@@ -29,12 +29,12 @@ func NewBooleanOptionalAction(optionStrings []string, dest string, defaultVal an
 
 	action := Action{
 		OptionStrings: _optionStrings,
-		Dest:          dest,
+		Dest:          argument.Dest,
 		Nargs:         0,
-		Default:       defaultVal,
-		Required:      required,
-		Help:          help,
-		Deprecated:    deprecated,
+		Default:       argument.Default,
+		Required:      argument.Required,
+		Help:          argument.Help,
+		Deprecated:    argument.Deprecated,
 	}
 
 	return &BooleanOptionalAction{Action: action}

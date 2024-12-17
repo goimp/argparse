@@ -11,7 +11,7 @@ type AppendAction struct {
 }
 
 // NewAppendAction creates a new AppendAction.
-func NewAppendAction(argument *Argument) *AppendAction {
+func NewAppendAction(argument *Argument) ActionInterface {
 
 	switch v := argument.Nargs.(type) {
 	case int:

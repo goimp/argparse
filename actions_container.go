@@ -114,7 +114,7 @@ func (ac *ActionsContainer) SetDefaults(kwargs map[string]any) {
 
 	// Update the default value of actions that match the keys in kwargs
 	for _, actionInterface := range ac.Actions {
-		action := actionInterface.Self()
+		action := actionInterface.Struct()
 		if defaultValue, exists := kwargs[action.Dest]; exists {
 			action.Default = defaultValue
 		}
@@ -124,7 +124,7 @@ func (ac *ActionsContainer) SetDefaults(kwargs map[string]any) {
 func (ac *ActionsContainer) GetDefault(dest string) any {
 	// Iterate over actions to find a matching dest with a non-nil default value
 	for _, actionInterface := range ac.Actions {
-		action := actionInterface.Self()
+		action := actionInterface.Struct()
 		if action.Dest == dest && action.Default != nil {
 			return action.Default
 		}
@@ -189,23 +189,18 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 	// Check if the registry value is of type NewActionFuncType and invoke it
 	actionName := argument.Action
 
-	action := ac.createAction(actionName, argument)
+	// action := ac.createAction(actionName, argument)
 
-	// fmt.Println(a)
-	// var action *Action
-
-	// if createAction, ok := newActionFunc.(func(*Argument) *Action); ok {
-	// 	action = createAction(argument)
-	// 	// if action, ok = createAction(argument).(*Action); !ok {
-	// 	// 	panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
-	// 	// }
-	// } else {
-	// 	panic(fmt.Sprintf("unknown action: %v: %v", actionName, newActionFunc))
-	// }
+	createAction := ac.registryGet("action", actionName, actionName)
+	callback, ok := createAction.(func(*Argument) ActionInterface)
+	if !ok {
+		panic(fmt.Sprintf("action %s, result does not implement ActionInterface: %T", actionName, callback))
+	}
+	action := callback(argument)
 
 	// raise an error if action for positional argument does not consume arguments
-	if action.Self().OptionStrings == nil {
-		if nargs, ok := action.Self().Nargs.(int); ok && nargs == 0 {
+	if action.Struct().OptionStrings == nil {
+		if nargs, ok := action.Struct().Nargs.(int); ok && nargs == 0 {
 			panic(fmt.Sprintf("action %v is not valid for positional arguments", actionName))
 		}
 	}
@@ -305,15 +300,15 @@ func (ac *ActionsContainer) AddAction(action ActionInterface) ActionInterface {
 
 	// add to actions list
 	ac.Actions = append(ac.Actions, action)
-	action.Self().container = ac
+	action.Struct().container = ac
 
 	// index the action by any option strings it has
-	for _, optionString := range action.Self().OptionStrings {
+	for _, optionString := range action.Struct().OptionStrings {
 		ac.optionStringActions[optionString] = action
 	}
 
 	// set the flag if any option strings look like negative numbers
-	for _, optionString := range action.Self().OptionStrings {
+	for _, optionString := range action.Struct().OptionStrings {
 		if ac.negativeNumberMatcher.MatchString(optionString) {
 			if len(ac.hasNegativeNumberOptionals) == 0 {
 				ac.hasNegativeNumberOptionals = append(ac.hasNegativeNumberOptionals, true)

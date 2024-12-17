@@ -6,7 +6,7 @@ type CountAction struct {
 }
 
 // NewCountAction creates a new CountAction.
-func NewCountAction(argument *Argument) *CountAction {
+func NewCountAction(argument *Argument) ActionInterface {
 	return &CountAction{
 		Action: &Action{
 			OptionStrings: argument.OptionStrings,

@@ -7,7 +7,7 @@ type HelpAction struct {
 
 // NewHelpAction creates a new HelpAction.
 // NewHelpAction creates a new HelpAction.
-func NewHelpAction(argument *Argument) *HelpAction {
+func NewHelpAction(argument *Argument) ActionInterface {
 
 	// Default dest to SUPPRESS if empty
 	if argument.Dest == "" {

@@ -23,7 +23,7 @@ func TestAction(t *testing.T) {
 	}
 
 	// Test GetKwargs
-	kwargs := action.GetKwargs()
+	kwargs := action.GetMap()
 	if kwargs["Dest"] != "verbose" {
 		t.Errorf("expected %q, got %q", "verbose", kwargs["Dest"])
 	}

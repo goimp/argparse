@@ -6,7 +6,7 @@ type StoreConstAction struct {
 }
 
 // // NewStoreConstAction creates a new StoreConstAction with the provided parameters.
-func NewStoreConstAction(argument *Argument) *StoreConstAction {
+func NewStoreConstAction(argument *Argument) ActionInterface {
 	// Validate nargs
 
 	// Create the base Action
@@ -26,12 +26,12 @@ func NewStoreConstAction(argument *Argument) *StoreConstAction {
 }
 
 // // Make sure StoreTrueAction implements ActionInterface
-// func (a *StoreConstAction) Self() *Action {
-// 	return a.Action.Self() // Call Self() from StoreConstAction
+// func (a *StoreConstAction) Struct() *Action {
+// 	return a.Action.Struct() // Call Struct() from StoreConstAction
 // }
 
-// func (a *StoreConstAction) GetKwargs() map[string]any {
-// 	return a.Action.GetKwargs()
+// func (a *StoreConstAction) GetMap() map[string]any {
+// 	return a.Action.GetMap()
 // }
 
 // func (a *StoreConstAction) FormatUsage() string {

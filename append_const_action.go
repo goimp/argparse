@@ -10,7 +10,7 @@ type AppendConstAction struct {
 }
 
 // NewAppendConstAction creates a new AppendConstAction.
-func NewAppendConstAction(argument *Argument) *AppendConstAction {
+func NewAppendConstAction(argument *Argument) ActionInterface {
 	return &AppendConstAction{
 		Action: &Action{
 			OptionStrings: argument.OptionStrings,

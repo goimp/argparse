@@ -12,9 +12,9 @@ type ExtendAction struct {
 }
 
 // NewExtendAction creates a new ExtendAction.
-func NewExtendAction(argument *Argument) *ExtendAction {
+func NewExtendAction(argument *Argument) ActionInterface {
 	action := NewAppendAction(argument)
-	return &ExtendAction{AppendAction: action}
+	return &ExtendAction{AppendAction: action.(*AppendAction)}
 }
 
 func isSlice(value any) bool {

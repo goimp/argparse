@@ -12,7 +12,7 @@ type VersionAction struct {
 }
 
 // NewVersionAction creates a new VersionAction.
-func NewVersionAction(argument *Argument) *VersionAction {
+func NewVersionAction(argument *Argument) ActionInterface {
 	return &VersionAction{
 		Action: &Action{
 			OptionStrings: argument.OptionStrings,

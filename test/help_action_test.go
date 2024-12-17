@@ -20,7 +20,7 @@ func TestHelpAction(t *testing.T) {
 	// 	t.Errorf("HelpAction creation error: %s", err)
 	// }
 
-	// fmt.Printf("Kwargs: %v\n", a.GetKwargs())
+	// fmt.Printf("Kwargs: %v\n", a.GetMap())
 
 	// p.PrintHelp(nil)
 

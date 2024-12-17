@@ -9,10 +9,10 @@ type TypeFunc = func(string) (any, error)
 type NewActionFuncType = func(*Argument) *Action
 
 type ActionInterface interface {
-	GetKwargs() map[string]any
+	GetMap() map[string]any
 	FormatUsage() string
 	Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error
-	Self() *Action
+	Struct() *Action
 }
 
 // Action represents the action associated with an argument.
@@ -50,12 +50,12 @@ func NewAction(argument *Argument) *Action {
 	}
 }
 
-func (a *Action) Self() *Action {
+func (a *Action) Struct() *Action {
 	return a
 }
 
 // Override GetKwargs to customize keyword arguments
-func (a *Action) GetKwargs() map[string]any {
+func (a *Action) GetMap() map[string]any {
 	return map[string]any{
 		"OptionStrings": a.OptionStrings,
 		"Dest":          a.Dest,

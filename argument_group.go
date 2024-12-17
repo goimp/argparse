@@ -55,7 +55,7 @@ func (ag *ArgumentGroup) AddAction(action ActionInterface) ActionInterface {
 
 func (ag *ArgumentGroup) RemoveAction(dest string) error {
 	for i, actionInterface := range ag.Actions {
-		action := actionInterface.Self()
+		action := actionInterface.Struct()
 		if action.Dest == dest {
 			// Remove the action by appending slices before and after the index
 			ag.Actions = append(ag.Actions[:i], ag.Actions[i+1:]...)

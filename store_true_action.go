@@ -5,21 +5,21 @@ type StoreTrueAction struct {
 	*StoreConstAction // Embed Action to inherit its behavior
 }
 
-func NewStoreTrueAction(argument *Argument) *StoreTrueAction {
+func NewStoreTrueAction(argument *Argument) ActionInterface {
 	argument.Const = true
 	storeConstAction := NewStoreConstAction(argument)
 	return &StoreTrueAction{
-		StoreConstAction: storeConstAction,
+		StoreConstAction: storeConstAction.(*StoreConstAction),
 	}
 }
 
 // Make sure StoreTrueAction implements ActionInterface
-func (a *StoreTrueAction) Self() *Action {
-	return a.StoreConstAction.Self() // Call Self() from StoreConstAction
+func (a *StoreTrueAction) Struct() *Action {
+	return a.StoreConstAction.Struct() // Call Struct() from StoreConstAction
 }
 
-func (a *StoreTrueAction) GetKwargs() map[string]any {
-	return a.StoreConstAction.GetKwargs()
+func (a *StoreTrueAction) GetMap() map[string]any {
+	return a.StoreConstAction.GetMap()
 }
 
 func (a *StoreTrueAction) FormatUsage() string {

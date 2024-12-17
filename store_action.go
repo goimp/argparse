@@ -8,7 +8,7 @@ type StoreAction struct {
 	*Action
 }
 
-func NewStoreAction(argument *Argument) *StoreAction {
+func NewStoreAction(argument *Argument) ActionInterface {
 
 	switch v := argument.Nargs.(type) {
 	case int:

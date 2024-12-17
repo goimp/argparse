@@ -23,7 +23,7 @@ func TestCountAction(t *testing.T) {
 	// 	t.Errorf("CountAction creation error: %s", err)
 	// }
 
-	// fmt.Printf("Kwargs: %v\n", a.GetKwargs())
+	// fmt.Printf("Kwargs: %v\n", a.GetMap())
 
 	// a.Call(nil, n, 5, "")
 

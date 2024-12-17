@@ -18,7 +18,7 @@ func NewArgumentParser(kwargs map[string]any) (*ArgumentParser, error) {
 
 // Pretty __repr__ methods
 
-func (ap *ArgumentParser) GetKwargs() {
+func (ap *ArgumentParser) GetMap() {
 
 }
 
