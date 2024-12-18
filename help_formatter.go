@@ -8,44 +8,48 @@ import (
 )
 
 type HelpFormatterInterface interface {
-	Struct() *HelpFormatter
-	Indent_()
-	Dedent_()
-	AddItem_(func(...any) string, ...any)
+	Struct() *HelpFormatter               // +
+	Indent_()                             // +
+	Dedent_()                             // +
+	AddItem_(func(...any) string, ...any) // +
 
-	StartSection(string)
-	EndSection()
-	AddText(string)
-	AddUsage(string, []ActionInterface, []ActionsContainerInterface, string)
+	// Message building methods
+	StartSection(string)                                                     // +
+	EndSection()                                                             // +
+	AddText(string)                                                          // +
+	AddUsage(string, []ActionInterface, []ActionsContainerInterface, string) // +
+	AddArgument(ActionInterface)                                             // ?
+	AddArguments([]ActionInterface)                                          // +
 
-	AddArgument(ActionInterface)
-	AddArguments([]ActionInterface)
-
-	FormatHelp(...any) string
-	JoinParts_([]string) string
+	// Help-formatting methods
+	FormatHelp() string               // +
+	formatHelpCallBack(...any) string // +
+	JoinParts_([]string) string       // +
 	FormatUsage_(string, []ActionInterface, []ActionsContainerInterface, string) string
-	FormatActionsUsage_([]ActionInterface, []ActionsContainerInterface) string
-	GetActionsUsageParts_([]ActionInterface, []ActionsContainerInterface) []string
+	FormatActionsUsage_([]ActionInterface, []ActionsContainerInterface) string     // +
+	GetActionsUsageParts_([]ActionInterface, []ActionsContainerInterface) []string // -
 
-	FormatText_(string) string
-	FormatAction_(ActionInterface) string
-	FormatActionInvocation_(ActionInterface) string
+	FormatText_(string) string                      // +
+	FormatAction_(ActionInterface) string           // -
+	formatActionCallback_(...any) string            // +
+	FormatActionInvocation_(ActionInterface) string // +
 
-	MetaVarFormatter_(ActionInterface, string) func(int) []string
-	FormatArgs_(ActionInterface, string) string
-	ExpandHelp_(ActionInterface, string) string
-	IterIndentedSubactions_(ActionInterface) []ActionInterface
-	SplitLines_(string, int) []string
-	FillText_(string, int, string) string
+	MetaVarFormatter_(ActionInterface, string) func(int) []string // -
+	FormatArgs_(ActionInterface, string) string                   // +
+	ExpandHelp_(ActionInterface, string) string                   // -
+	IterIndentedSubactions_(ActionInterface) []ActionInterface    // +
+	SplitLines_(string, int) []string                             // -
+	FillText_(string, int, string) string                         // ?
 
-	GetHelpString_(action ActionInterface) string
-	GetDefaultMetaVarForOptional_(action ActionInterface) string
-	GetDefaultMetaVarForPositional_(action ActionInterface) string
+	GetHelpString_(action ActionInterface) string                  // +
+	GetDefaultMetaVarForOptional_(action ActionInterface) string   // +
+	GetDefaultMetaVarForPositional_(action ActionInterface) string // +
 }
 
 const DefaultTerminalWidth = 80
 
 func GetTerminalWidth() int {
+	// FIXME: not done
 	return DefaultTerminalWidth
 }
 
@@ -146,11 +150,13 @@ func (hf *HelpFormatter) Struct() *HelpFormatter {
 	return hf
 }
 
+// Indent increases the current indentation level.
 func (hf *HelpFormatter) Indent_() {
 	hf.CurrentIndent_ += hf.IndentIncrement
 	hf.Level++
 }
 
+// Dedent decreases the current indentation level.
 func (hf *HelpFormatter) Dedent_() {
 	hf.CurrentIndent_ -= hf.IndentIncrement
 	if hf.CurrentIndent_ < 0 {
@@ -159,12 +165,29 @@ func (hf *HelpFormatter) Dedent_() {
 	hf.Level--
 }
 
+// func (hf *HelpFormatter) AddItem_(func_ func(...any) string, args ...any) {
+// 	section := &SectionItem_{
+// 		Func: func_,
+// 		Args: args,
+// 	}
+// 	hf.CurrentSection.Items = append(hf.CurrentSection.Items, section)
+// }
+
+// AddItem_ adds a function and its arguments to the current section's items.
 func (hf *HelpFormatter) AddItem_(func_ func(...any) string, args ...any) {
-	section := &SectionItem_{
+	// Ensure the CurrentSection is initialized
+	if hf.CurrentSection == nil {
+		panic("CurrentSection is not initialized")
+	}
+
+	// Create a new SectionItem_
+	sectionItem := &SectionItem_{
 		Func: func_,
 		Args: args,
 	}
-	hf.CurrentSection.Items = append(hf.CurrentSection.Items, section)
+
+	// Append the item to the Items slice of CurrentSection
+	hf.CurrentSection.Items = append(hf.CurrentSection.Items, sectionItem)
 }
 
 // ========================
@@ -189,17 +212,28 @@ func (hf *HelpFormatter) EndSection() {
 
 func (hf *HelpFormatter) AddText(text string) {
 	if text != SUPPRESS && text != "" {
-		hf.AddItem_(hf.FormatHelp, text)
+		hf.AddItem_(hf.formatHelpCallBack, text)
 	}
 }
 
+// AddUsage adds the usage information to the formatter
 func (hf *HelpFormatter) AddUsage(usage string, actions []ActionInterface, groups []ActionsContainerInterface, prefix string) {
 	if usage != SUPPRESS {
+		// Prepare arguments as a slice of any type
 		args := []any{usage, actions, groups, prefix}
-		hf.AddItem_(hf.FormatHelp, args...)
+		// Add the formatted item to the current section
+		hf.AddItem_(hf.formatHelpCallBack, args...)
 	}
 }
 
+// func (hf *HelpFormatter) AddUsage(usage string, actions []ActionInterface, groups []ActionsContainerInterface, prefix string) {
+// 	if usage != SUPPRESS {
+// 		args := []any{usage, actions, groups, prefix}
+// 		hf.AddItem_(hf.FormatHelp, args...)
+// 	}
+// }
+
+// AddArgument adds a formatted argument to the help formatter
 func (hf *HelpFormatter) AddArgument(action ActionInterface) {
 	if action.Struct().Help != SUPPRESS {
 
@@ -213,10 +247,17 @@ func (hf *HelpFormatter) AddArgument(action ActionInterface) {
 		// update the maximum item length
 		actionLength := max(invocationLengths...)
 		hf.ActionMaxLength = max(hf.ActionMaxLength, actionLength)
+
+		// add the item to the list
+		// FIXME: not done
+		hf.AddItem_(hf.formatActionCallback_, action)
 	}
 }
 
 func (hf *HelpFormatter) AddArguments(actions []ActionInterface) {
+	if len(actions) == 0 {
+		return
+	}
 	for _, action := range actions {
 		hf.AddArgument(action)
 	}
@@ -226,7 +267,11 @@ func (hf *HelpFormatter) AddArguments(actions []ActionInterface) {
 // Help-formatting methods
 // =======================
 
-func (hf *HelpFormatter) FormatHelp(args ...any) string {
+func (hp *HelpFormatter) formatHelpCallBack(...any) string {
+	return hp.FormatHelp()
+}
+
+func (hf *HelpFormatter) FormatHelp() string {
 	help := hf.RootSection.FormatHelp()
 	if help != "" {
 		help = hf.LongBreakMatcher.ReplaceAllString(help, "\n\n")
@@ -236,12 +281,15 @@ func (hf *HelpFormatter) FormatHelp(args ...any) string {
 }
 
 func (hf *HelpFormatter) JoinParts_(partStrings []string) string {
-	parts := []string{}
+	// Use a slice to collect parts
+	var parts []string
 	for _, part := range partStrings {
 		if part != "" && part != SUPPRESS {
 			parts = append(parts, part)
 		}
 	}
+
+	// Return the concatenated result
 	return strings.Join(parts, "")
 }
 
@@ -353,7 +401,11 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []ActionInterface, g
 }
 
 func (hf *HelpFormatter) FormatActionsUsage_(actions []ActionInterface, groups []ActionsContainerInterface) string {
-	return strings.Join(hf.GetActionsUsageParts_(actions, groups), " ")
+	// Get the parts for actions usage
+	usageParts := hf.GetActionsUsageParts_(actions, groups)
+
+	// Join the parts with a space separator and return
+	return strings.Join(usageParts, " ")
 }
 
 func (hf *HelpFormatter) GetActionsUsageParts_(actions []ActionInterface, groups []ActionsContainerInterface) []string {
@@ -362,21 +414,92 @@ func (hf *HelpFormatter) GetActionsUsageParts_(actions []ActionInterface, groups
 }
 
 func (hf *HelpFormatter) FormatText_(text string) string {
+	// Replace placeholders like '%(prog)' with actual values
 	text = formatKeys(text, map[string]any{"prog": hf.Prog_})
+
+	// Calculate the width and the indentation
 	textWidth := max(hf.Width_-hf.CurrentIndent_, 11)
 	indent := strings.Repeat(" ", hf.CurrentIndent_)
-	return hf.FillText_(text, textWidth, indent)
+
+	// Format the text with wrapping
+	formattedText := hf.FillText_(text, textWidth, indent)
+
+	// Add line breaks at the end, if needed
+	return formattedText + "\n\n"
+}
+
+// func (hf *HelpFormatter) FormatText_(text string) string {
+// 	text = formatKeys(text, map[string]any{"prog": hf.Prog_})
+// 	textWidth := max(hf.Width_-hf.CurrentIndent_, 11)
+// 	indent := strings.Repeat(" ", hf.CurrentIndent_)
+// 	return hf.FillText_(text, textWidth, indent)
+// }
+
+func (hf *HelpFormatter) formatActionCallback_(args ...any) string {
+	if intf, ok := args[0].(ActionInterface); ok {
+		// Use intf instead of action to call FormatAction_
+		return hf.FormatAction_(intf)
+	}
+	// Optionally, handle the error gracefully (e.g., panic with a message).
+	panic("Invalid type for FormatAction_ callback.")
 }
 
 func (hf *HelpFormatter) FormatAction_(action ActionInterface) string {
 	// FIXME: Not done
+
+	// act := action.(ActionInterface)
+
 	return ""
 }
 
 func (hf *HelpFormatter) FormatActionInvocation_(action ActionInterface) string {
-	// FIXME: Not done
-	return ""
+	// If option strings are nil, it's a positional argument
+	if action.Struct().OptionStrings == nil {
+		defaultValue := hf.GetDefaultMetaVarForPositional_(action)
+		return strings.Join(hf.MetaVarFormatter_(action, defaultValue)(1), " ")
+	}
+
+	// Handle option arguments with a value (e.g., -s, --long ARGS)
+	nargs, isInt := action.Struct().Nargs.(int)
+
+	switch {
+	case !isInt: // Handle if nargs is not an int (e.g., string or other cases)
+		// Fallback or error handling for unsupported nargs type
+		return "Unsupported nargs type"
+	case nargs == 0:
+		// If nargs is 0, we return only option strings
+		return strings.Join(action.Struct().OptionStrings, ", ")
+
+	case nargs > 0:
+		// If nargs is greater than 0, format args as "option ARGS"
+		defaultValue := hf.GetDefaultMetaVarForOptional_(action)
+		argsString := hf.FormatArgs_(action, defaultValue)
+		return strings.Join(action.Struct().OptionStrings, ", ") + " " + argsString
+
+	default:
+		// Handle unsupported nargs value (e.g., panic handling)
+		return "Invalid nargs value"
+	}
 }
+
+// func (hf *HelpFormatter) FormatActionInvocation_(action ActionInterface) string {
+// 	if action.Struct().OptionStrings == nil {
+// 		defaultValue := hf.GetDefaultMetaVarForPositional_(action)
+// 		return strings.Join(hf.MetaVarFormatter_(action, defaultValue)(1), " ")
+// 	} else {
+// 		// if the Optional doesn't take a value, format is:
+// 		//     -s, --long
+// 		if nargs, ok := action.Struct().Nargs.(int); ok && nargs == 0 {
+// 			return strings.Join(action.Struct().OptionStrings, ", ")
+// 		} else {
+// 			// if the Optional takes a value, format is:
+// 			//    -s, --long ARGS
+// 			defaultValue := hf.GetDefaultMetaVarForOptional_(action)
+// 			argsString := hf.FormatArgs_(action, defaultValue)
+// 			return strings.Join(action.Struct().OptionStrings, ", ") + " " + argsString
+// 		}
+// 	}
+// }
 
 func (hf *HelpFormatter) MetaVarFormatter_(action ActionInterface, defaultMetaVar string) func(int) []string {
 	// FIXME: Not done
@@ -389,7 +512,7 @@ func (hf *HelpFormatter) MetaVarFormatter_(action ActionInterface, defaultMetaVa
 		for _, choice := range action.Struct().Choices {
 			strChoices = append(strChoices, fmt.Sprintf("%s", choice))
 		}
-		result = fmt.Sprintf("%s", strings.Join(strChoices, ","))
+		result = strings.Join(strChoices, ",")
 	} else {
 		result = defaultMetaVar
 	}
@@ -408,8 +531,44 @@ func (hf *HelpFormatter) MetaVarFormatter_(action ActionInterface, defaultMetaVa
 }
 
 func (hf *HelpFormatter) FormatArgs_(action ActionInterface, defaultMetaVar string) string {
-	// FIXME: Not done
-	return ""
+	getMetaVar := hf.MetaVarFormatter_(action, defaultMetaVar)
+
+	act := action.Struct()
+	var result string
+
+	switch nargs := act.Nargs.(type) {
+	case nil:
+		result = fmt.Sprintf("%s", getMetaVar(1))
+	case string:
+		switch nargs {
+		case OPTIONAL:
+			result = fmt.Sprintf("[%s]", getMetaVar(1))
+		case ZERO_OR_MORE:
+			metavar := getMetaVar(1)
+			if len(metavar) == 2 {
+				result = fmt.Sprintf("[%s [%s ...]]", metavar, metavar)
+			} else {
+				result = fmt.Sprintf("[%s ...]", metavar)
+			}
+		case ONE_OR_MORE:
+			result = fmt.Sprintf("[%s ...]", getMetaVar(2))
+		case REMAINDER:
+			result = "..."
+		case PARSER:
+			result = fmt.Sprintf("%s ...", getMetaVar(1))
+		case SUPPRESS:
+			result = ""
+		default:
+			panic("invalid nargs value")
+		}
+	case int:
+		formats := strings.Repeat("%s ", nargs)
+		result = fmt.Sprintf(formats, getMetaVar(nargs))
+	default:
+		panic("invalid nargs value")
+	}
+
+	return result
 }
 
 func (hf *HelpFormatter) ExpandHelp_(action ActionInterface, defaultMetaVar string) string {
@@ -428,15 +587,32 @@ func (hf *HelpFormatter) ExpandHelp_(action ActionInterface, defaultMetaVar stri
 }
 
 func (hf *HelpFormatter) IterIndentedSubactions_(action ActionInterface) []ActionInterface {
+	// Get subactions from the action
 	getSubActions := action.GetSubActions
+
+	// Get the subactions
 	subactions := getSubActions()
+
+	// If subactions are not nil, indent and return them
 	if subactions != nil {
-		hf.Indent_()
-		subactions = append(subactions, subactions...)
-		hf.Dedent_()
+		hf.Indent_() // Add indentation before processing subactions
+		// Simply return the subactions here, no need to append them to themselves
+		hf.Dedent_() // Remove indentation after processing subactions
 	}
+
 	return subactions
 }
+
+// func (hf *HelpFormatter) IterIndentedSubactions_(action ActionInterface) []ActionInterface {
+// 	getSubActions := action.GetSubActions
+// 	subactions := getSubActions()
+// 	if subactions != nil {
+// 		hf.Indent_()
+// 		subactions = append(subactions, subactions...)
+// 		hf.Dedent_()
+// 	}
+// 	return subactions
+// }
 
 func (hf *HelpFormatter) SplitLines_(text string, width int) []string {
 	// FIXME: Not done
