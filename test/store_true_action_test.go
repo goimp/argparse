@@ -1,9 +1,10 @@
 package argparse_test
 
 import (
-	"argparse"
 	"fmt"
 	"testing"
+
+	"github.com/goimp/argparse"
 )
 
 func TestStoreTrueAction(t *testing.T) {

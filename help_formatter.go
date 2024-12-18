@@ -1,7 +1,6 @@
-package help_formatter
+package argparse
 
 import (
-	"argparse"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -17,31 +16,31 @@ type HelpFormatterInterface interface {
 	StartSection(string)
 	EndSection()
 	AddText(string)
-	AddUsage(string, []argparse.ActionInterface, []argparse.ActionsContainerInterface, string)
+	AddUsage(string, []ActionInterface, []ActionsContainerInterface, string)
 
-	AddArgument(argparse.ActionInterface)
-	AddArguments([]argparse.ActionInterface)
+	AddArgument(ActionInterface)
+	AddArguments([]ActionInterface)
 
 	FormatHelp(...any) string
 	JoinParts_([]string) string
-	FormatUsage_(string, []argparse.ActionInterface, []argparse.ActionsContainerInterface, string) string
-	FormatActionsUsage_([]argparse.ActionInterface, []argparse.ActionsContainerInterface) string
-	GetActionsUsageParts_([]argparse.ActionInterface, []argparse.ActionsContainerInterface) []string
+	FormatUsage_(string, []ActionInterface, []ActionsContainerInterface, string) string
+	FormatActionsUsage_([]ActionInterface, []ActionsContainerInterface) string
+	GetActionsUsageParts_([]ActionInterface, []ActionsContainerInterface) []string
 
 	FormatText_(string) string
-	FormatAction_(argparse.ActionInterface) string
-	FormatActionInvocation_(argparse.ActionInterface) string
+	FormatAction_(ActionInterface) string
+	FormatActionInvocation_(ActionInterface) string
 
-	MetaVarFormatter_(argparse.ActionInterface, string) func(int) []string
-	FormatArgs_(argparse.ActionInterface, string) string
-	ExpandHelp_(argparse.ActionInterface, string) string
-	IterIndentedSubactions_(argparse.ActionInterface) []argparse.ActionInterface
+	MetaVarFormatter_(ActionInterface, string) func(int) []string
+	FormatArgs_(ActionInterface, string) string
+	ExpandHelp_(ActionInterface, string) string
+	IterIndentedSubactions_(ActionInterface) []ActionInterface
 	SplitLines_(string, int) []string
 	FillText_(string, int, string) string
 
-	GetHelpString_(action argparse.ActionInterface) string
-	GetDefaultMetaVarForOptional_(action argparse.ActionInterface) string
-	GetDefaultMetaVarForPositional_(action argparse.ActionInterface) string
+	GetHelpString_(action ActionInterface) string
+	GetDefaultMetaVarForOptional_(action ActionInterface) string
+	GetDefaultMetaVarForPositional_(action ActionInterface) string
 }
 
 const DefaultTerminalWidth = 80
@@ -84,9 +83,9 @@ func (s *Section_) FormatHelp(...any) string {
 
 	var heading string
 	// add the heading if the section was non-empty
-	if s.Heading != argparse.SUPPRESS && s.Heading != "" {
+	if s.Heading != SUPPRESS && s.Heading != "" {
 		currentIndent := s.Formatter.Struct().CurrentIndent_
-		headingText := fmt.Sprintf("%s:", s.Heading)
+		headingText := formatKeys("%(heading)s:", map[string]any{"heading": s.Heading})
 		heading = fmt.Sprintf("%*s%s\n", currentIndent, "", headingText)
 	} else {
 		heading = ""
@@ -189,20 +188,20 @@ func (hf *HelpFormatter) EndSection() {
 }
 
 func (hf *HelpFormatter) AddText(text string) {
-	if text != argparse.SUPPRESS && text != "" {
+	if text != SUPPRESS && text != "" {
 		hf.AddItem_(hf.FormatHelp, text)
 	}
 }
 
-func (hf *HelpFormatter) AddUsage(usage string, actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface, prefix string) {
-	if usage != argparse.SUPPRESS {
+func (hf *HelpFormatter) AddUsage(usage string, actions []ActionInterface, groups []ActionsContainerInterface, prefix string) {
+	if usage != SUPPRESS {
 		args := []any{usage, actions, groups, prefix}
 		hf.AddItem_(hf.FormatHelp, args...)
 	}
 }
 
-func (hf *HelpFormatter) AddArgument(action argparse.ActionInterface) {
-	if action.Struct().Help != argparse.SUPPRESS {
+func (hf *HelpFormatter) AddArgument(action ActionInterface) {
+	if action.Struct().Help != SUPPRESS {
 
 		// find all invocations
 		getInvocation := hf.FormatActionInvocation_
@@ -217,7 +216,7 @@ func (hf *HelpFormatter) AddArgument(action argparse.ActionInterface) {
 	}
 }
 
-func (hf *HelpFormatter) AddArguments(actions []argparse.ActionInterface) {
+func (hf *HelpFormatter) AddArguments(actions []ActionInterface) {
 	for _, action := range actions {
 		hf.AddArgument(action)
 	}
@@ -239,14 +238,14 @@ func (hf *HelpFormatter) FormatHelp(args ...any) string {
 func (hf *HelpFormatter) JoinParts_(partStrings []string) string {
 	parts := []string{}
 	for _, part := range partStrings {
-		if part != "" && part != argparse.SUPPRESS {
+		if part != "" && part != SUPPRESS {
 			parts = append(parts, part)
 		}
 	}
 	return strings.Join(parts, "")
 }
 
-func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface, prefix string) string {
+func (hf *HelpFormatter) FormatUsage_(usage string, actions []ActionInterface, groups []ActionsContainerInterface, prefix string) string {
 	if prefix != "" {
 		prefix = "usage: "
 	}
@@ -256,13 +255,13 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 		usage = fmt.Sprintf(usage, hf.Prog_)
 	} else if usage == "" && len(actions) == 0 {
 		// if no optionals or positionals are available, usage is just prog
-		usage = hf.Prog_
+		usage = formatKeys("%(prog)s", map[string]any{"prog": hf.Prog_})
 	} else if usage == "" {
-		prog := hf.Prog_
+		prog := formatKeys("%(prog)s", map[string]any{"prog": hf.Prog_})
 
 		// split optionals from positionals
-		optionals := []argparse.ActionInterface{}
-		positionals := []argparse.ActionInterface{}
+		optionals := []ActionInterface{}
+		positionals := []ActionInterface{}
 
 		for _, action := range actions {
 			if action.Struct().OptionStrings != nil {
@@ -353,35 +352,33 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 	return fmt.Sprintf("%s%s\n\n", prefix, usage)
 }
 
-func (hf *HelpFormatter) FormatActionsUsage_(actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface) string {
+func (hf *HelpFormatter) FormatActionsUsage_(actions []ActionInterface, groups []ActionsContainerInterface) string {
 	return strings.Join(hf.GetActionsUsageParts_(actions, groups), " ")
 }
 
-func (hf *HelpFormatter) GetActionsUsageParts_(actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface) []string {
+func (hf *HelpFormatter) GetActionsUsageParts_(actions []ActionInterface, groups []ActionsContainerInterface) []string {
 	// FIXME: Not done
 	return []string{}
 }
 
 func (hf *HelpFormatter) FormatText_(text string) string {
-	if strings.Contains(text, "%s") {
-		text = fmt.Sprintf(text, hf.Prog_)
-	}
+	text = formatKeys(text, map[string]any{"prog": hf.Prog_})
 	textWidth := max(hf.Width_-hf.CurrentIndent_, 11)
 	indent := strings.Repeat(" ", hf.CurrentIndent_)
 	return hf.FillText_(text, textWidth, indent)
 }
 
-func (hf *HelpFormatter) FormatAction_(action argparse.ActionInterface) string {
+func (hf *HelpFormatter) FormatAction_(action ActionInterface) string {
 	// FIXME: Not done
 	return ""
 }
 
-func (hf *HelpFormatter) FormatActionInvocation_(action argparse.ActionInterface) string {
+func (hf *HelpFormatter) FormatActionInvocation_(action ActionInterface) string {
 	// FIXME: Not done
 	return ""
 }
 
-func (hf *HelpFormatter) MetaVarFormatter_(action argparse.ActionInterface, defaultMetaVar string) func(int) []string {
+func (hf *HelpFormatter) MetaVarFormatter_(action ActionInterface, defaultMetaVar string) func(int) []string {
 	// FIXME: Not done
 	// return nil
 	var result string
@@ -410,42 +407,36 @@ func (hf *HelpFormatter) MetaVarFormatter_(action argparse.ActionInterface, defa
 	return format
 }
 
-func (hf *HelpFormatter) FormatArgs_(action argparse.ActionInterface, defaultMetaVar string) string {
+func (hf *HelpFormatter) FormatArgs_(action ActionInterface, defaultMetaVar string) string {
 	// FIXME: Not done
 	return ""
 }
 
-func (hf *HelpFormatter) ExpandHelp_(action argparse.ActionInterface, defaultMetaVar string) string {
+func (hf *HelpFormatter) ExpandHelp_(action ActionInterface, defaultMetaVar string) string {
+	helpString := hf.GetHelpString_(action)
+	if !strings.Contains(helpString, "%") {
+		return helpString
+	}
+	// params := map[string]interface{}{
+	// 	"prog": hf.Prog_,
+	// }
+	// for key, value := range action.Extra {
+	// 	params[key] = value
+	// }
 	// FIXME: Not done
 	return ""
 }
 
-func (hf *HelpFormatter) IterIndentedSubactions_(action argparse.ActionInterface) []argparse.ActionInterface {
-	// FIXME: Not done
-	return []argparse.ActionInterface{}
+func (hf *HelpFormatter) IterIndentedSubactions_(action ActionInterface) []ActionInterface {
+	getSubActions := action.GetSubActions
+	subactions := getSubActions()
+	if subactions != nil {
+		hf.Indent_()
+		subactions = append(subactions, subactions...)
+		hf.Dedent_()
+	}
+	return subactions
 }
-
-// func (hf *HelpFormatter) IterIndentedSubactions_(action argparse.ActionInterface) <-chan argparse.ActionInterface {
-// 	ch := make(chan argparse.ActionInterface)
-
-// 	go func() {
-// 		defer close(ch) // Ensure the channel is closed when done
-
-// 		var subactions []argparse.ActionInterface
-// 		if action.Struct().GetSubactions != nil {
-// 			subactions = action.Struct().GetSubactions()
-// 		}
-
-// 		hf.Indent_()
-// 		defer hf.Dedent_() // Ensure dedent is called even if the loop exits
-
-// 		for _, subaction := range subactions {
-// 			ch <- subaction // Send each subaction to the channel
-// 		}
-// 	}()
-
-// 	return ch
-// }
 
 func (hf *HelpFormatter) SplitLines_(text string, width int) []string {
 	// FIXME: Not done
@@ -486,19 +477,49 @@ func (hf *HelpFormatter) SplitLines_(text string, width int) []string {
 }
 
 func (hf *HelpFormatter) FillText_(text string, width int, indent string) string {
-	// FIXME: not done
-	return ""
+	// NOTE: 'indent' omited
+
+	textWrap := func(text string, width int) string {
+		if width <= 0 {
+			return text
+		}
+
+		var result strings.Builder
+		var line strings.Builder
+
+		words := strings.Fields(text)
+
+		for _, word := range words {
+			// Check if adding the word exceeds the width
+			if line.Len()+len(word)+1 > width { // +1 accounts for the space
+				// Append the current line to the result
+				result.WriteString(strings.TrimSpace(line.String()) + "\n")
+				line.Reset()
+			}
+			// Append the word to the current line
+			line.WriteString(word + " ")
+		}
+
+		// Add any remaining text in the line to the result
+		if line.Len() > 0 {
+			result.WriteString(strings.TrimSpace(line.String()))
+		}
+
+		return result.String()
+	}
+
+	return textWrap(text, width)
 }
 
-func (hf *HelpFormatter) GetHelpString_(action argparse.ActionInterface) string {
+func (hf *HelpFormatter) GetHelpString_(action ActionInterface) string {
 	return action.Struct().Help
 }
 
-func (hf *HelpFormatter) GetDefaultMetaVarForOptional_(action argparse.ActionInterface) string {
+func (hf *HelpFormatter) GetDefaultMetaVarForOptional_(action ActionInterface) string {
 	return strings.ToUpper(action.Struct().Dest)
 }
 
-func (hf *HelpFormatter) GetDefaultMetaVarForPositional_(action argparse.ActionInterface) string {
+func (hf *HelpFormatter) GetDefaultMetaVarForPositional_(action ActionInterface) string {
 	return action.Struct().Dest
 }
 
@@ -537,8 +558,17 @@ type RawDescriptionHelpFormatter struct {
 }
 
 func (fh *RawDescriptionHelpFormatter) FillText_(text string, width int, indent string) string {
-	// FIXME: not done
-	return ""
+	var builder strings.Builder
+
+	// Normalize line endings for consistent processing
+	lines := strings.SplitAfter(text, "\n") // Split while retaining line breaks
+
+	for _, line := range lines {
+		builder.WriteString(indent) // Add the indent
+		builder.WriteString(line)   // Add the original line (with line break if present)
+	}
+
+	return builder.String()
 }
 
 type RawTextHelpFormatter struct {
@@ -546,32 +576,100 @@ type RawTextHelpFormatter struct {
 }
 
 func (fh *RawTextHelpFormatter) FillText_(text string, width int, indent string) string {
-	// FIXME: not done
-	return ""
+	var builder strings.Builder
+
+	// Normalize line endings for consistent processing
+	lines := strings.SplitAfter(text, "\n") // Split while retaining line breaks
+
+	for _, line := range lines {
+		builder.WriteString(indent) // Add the indent
+		builder.WriteString(line)   // Add the original line (with line break if present)
+	}
+
+	return builder.String()
 }
 
 func (fh *RawTextHelpFormatter) SplitLines_(text string, width int) []string {
-	// FIXME: not done
-	return []string{}
+	return strings.SplitAfter(text, "\n")
 }
 
 type ArgumentDefaultsHelpFormatter struct {
 	*HelpFormatter
 }
 
-func (fh *ArgumentDefaultsHelpFormatter) GetHelpString_(action argparse.ActionInterface) string {
-	// FIXME: not done
-	return ""
+func (fh *ArgumentDefaultsHelpFormatter) GetHelpString_(action ActionInterface) string {
+	// Extract the action structure for easier reference
+
+	containsHelper := func(slice []string, value string) bool {
+		for _, v := range slice {
+			if v == value {
+				return true
+			}
+		}
+		return false
+	}
+
+	actionStruct := action.Struct()
+
+	// Initialize help text
+	help := actionStruct.Help
+	if help == "" {
+		help = ""
+	}
+
+	// Check if help already contains %(default)
+	if !strings.Contains(help, "%(default)") {
+		// Add default value if applicable
+		if actionStruct.Default != SUPPRESS {
+			defaultingNargs := []string{OPTIONAL, ZERO_OR_MORE}
+
+			// Handle Nargs as either string or number
+			switch t := actionStruct.Nargs.(type) {
+			case string:
+				// If Nargs is a string, check if it matches defaultingNargs
+				if len(actionStruct.OptionStrings) > 0 || containsHelper(defaultingNargs, t) {
+					help += fmt.Sprintf(" (default: %s)", actionStruct.Default)
+				}
+			case int:
+				// If Nargs is a number, no need to compare with defaultingNargs
+				if len(actionStruct.OptionStrings) > 0 {
+					help += fmt.Sprintf(" (default: %s)", actionStruct.Default)
+				}
+			default:
+				// Handle unexpected types gracefully (optional)
+				// help += fmt.Sprintf(" (default: %s)", actionStruct.Default)
+			}
+		}
+	}
+
+	return help
 }
 
 type MetaVarTypeHelpFormatter struct {
 	*HelpFormatter
 }
 
-func (fh *MetaVarTypeHelpFormatter) GetDefaultMetaVarForOptional_(action argparse.ActionInterface) string {
+func (fh *MetaVarTypeHelpFormatter) GetDefaultMetaVarForOptional_(action ActionInterface) string {
 	return reflect.TypeOf(action.Struct().Type).String()
 }
 
-func (fh *MetaVarTypeHelpFormatter) GetDefaultMetaVarForPositional_(action argparse.ActionInterface) string {
+func (fh *MetaVarTypeHelpFormatter) GetDefaultMetaVarForPositional_(action ActionInterface) string {
 	return reflect.TypeOf(action.Struct().Type).String()
+}
+
+func formatKeys(str string, values map[string]any) string {
+	// Create a regex pattern to match placeholders like %(key) or %(key)s
+	re := regexp.MustCompile(`%\((\w+)\)(s?)`)
+	// Iterate over matches
+	return re.ReplaceAllStringFunc(str, func(match string) string {
+		// Extract the key from the match (exclude the surrounding '%(' and ')')
+		key := match[2 : len(match)-2]
+		// Check if the key exists in the values map
+		if value, exists := values[key]; exists {
+			// Replace with the formatted value (using %v to convert to string)
+			return fmt.Sprintf("%v", value)
+		}
+		// If the key is not found, return the match unchanged
+		return match
+	})
 }

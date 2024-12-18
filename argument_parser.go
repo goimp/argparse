@@ -1,12 +1,11 @@
 package argparse
 
 import (
-	"argparse/attribute_holder"
 	"os"
 )
 
 type ArgumentParser struct {
-	*attribute_holder.AttributeHolder
+	*AttributeHolder
 	*ActionsContainer
 }
 

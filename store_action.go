@@ -13,7 +13,7 @@ func NewStoreAction(argument *Argument) ActionInterface {
 	switch v := argument.Nargs.(type) {
 	case int:
 		if v == 0 {
-			panic(fmt.Sprintf("nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate"))
+			panic("nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate")
 		}
 	case string:
 		if argument.Const != nil && v != OPTIONAL {

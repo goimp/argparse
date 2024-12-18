@@ -1,8 +1,5 @@
 package argparse
 
-import (
-	"argparse/attribute_holder" // Import the AttributeHolder package
-)
 
 type Type = any
 type TypeFunc = func(string) (any, error)
@@ -13,11 +10,12 @@ type ActionInterface interface {
 	FormatUsage() string
 	Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error
 	Struct() *Action
+	GetSubActions() []ActionInterface
 }
 
 // Action represents the action associated with an argument.
 type Action struct {
-	attribute_holder.AttributeHolder // Embedding AttributeHolder for its functionality
+	*AttributeHolder // Embedding AttributeHolder for its functionality
 
 	OptionStrings []string // The command-line option strings
 	Dest          string   // The destination name where the value will be stored
@@ -31,9 +29,8 @@ type Action struct {
 	MetaVar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
 
-	Container     ActionsContainerInterface
-	GetFormatter  any
-	GetSubactions func() []ActionInterface
+	Container    ActionsContainerInterface
+	GetFormatter any
 }
 
 func NewAction(argument *Argument) *Action {
@@ -84,4 +81,9 @@ func (a *Action) FormatUsage() string {
 // Call simulates the action being triggered (not implemented here, as per Python's version).
 func (a *Action) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
 	panic("action.Call() not implemented")
+}
+
+func (a *Action) GetSubActions() []ActionInterface {
+	// panic("action.GetSubActions() not implemented")
+	return nil
 }

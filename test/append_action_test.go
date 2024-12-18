@@ -1,10 +1,11 @@
 package argparse_test
 
 import (
-	"argparse"
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/goimp/argparse"
 )
 
 func TestAppendAction(t *testing.T) {

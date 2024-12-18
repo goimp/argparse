@@ -1,7 +1,6 @@
 package argparse
 
 import (
-	"argparse/copy_items"
 	"fmt"
 	"reflect"
 )
@@ -28,7 +27,7 @@ func (a *ExtendAction) Call(parser *ArgumentParser, namespace *Namespace, values
 		items = []any{}
 	}
 
-	items = copy_items.CopyItems(items)
+	items = CopyItems(items)
 	if !isSlice(items) {
 		return fmt.Errorf("values is not a slice")
 	}
@@ -36,3 +35,20 @@ func (a *ExtendAction) Call(parser *ArgumentParser, namespace *Namespace, values
 	namespace.Set(a.Dest, items)
 	return nil
 }
+
+// // Make sure StoreTrueAction implements ActionInterface
+// func (a *ExtendAction) Struct() *Action {
+// 	return a.AppendAction.Struct() // Call Struct() from StoreConstAction
+// }
+
+// func (a *ExtendAction) GetMap() map[string]any {
+// 	return a.AppendAction.GetMap()
+// }
+
+// func (a *ExtendAction) FormatUsage() string {
+// 	return a.AppendAction.FormatUsage()
+// }
+
+// func (a *ExtendAction) GetSubActions() []ActionInterface {
+// 	return a.AppendAction.GetSubActions()
+// }

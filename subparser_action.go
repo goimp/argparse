@@ -11,12 +11,12 @@ type SubParsersAction struct {
 	ProgPrefix     string
 	ParserClass    func(kwargs any) (any, error)
 	NameParserMap  map[string]any
-	ChoicesActions []*ChoicesPseudoAction
+	ChoicesActions []ActionInterface
 	Deprecated     map[string]struct{}
 }
 
 type ChoicesPseudoAction struct {
-	Action
+	*Action
 }
 
 // Constructor-like function to create a new ChoicesPseudoAction
@@ -32,7 +32,7 @@ func NewChoicesPseudoAction(name string, aliases []string, help string) *Choices
 
 	// Initialize Action struct via embedding
 	return &ChoicesPseudoAction{
-		Action: Action{
+		Action: &Action{
 			OptionStrings: []string{}, // Empty slice as per the original code
 			Dest:          dest,
 			Help:          help,
@@ -126,7 +126,7 @@ func (p *SubParsersAction) AddParser(name string, deprecated bool, kwargs map[st
 	return nil, nil
 }
 
-func (p *SubParsersAction) GetSubactions() []*ChoicesPseudoAction {
+func (p *SubParsersAction) GetSubActions() []ActionInterface {
 	return p.ChoicesActions
 }
 
