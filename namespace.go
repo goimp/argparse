@@ -9,7 +9,7 @@ import (
 // Namespace extends AttributeHolder to store attributes and provides functionality
 // for comparison, existence check, and string representation.
 type Namespace struct {
-	*AttributeHolder
+	*AttributeHolder_
 	attributes map[string]any
 }
 

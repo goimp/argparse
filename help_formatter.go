@@ -7,21 +7,18 @@ import (
 	"strings"
 )
 
-type HelpFormatterInterface interface {
-	Struct() *HelpFormatter               // +
-	Indent_()                             // +
-	Dedent_()                             // +
-	AddItem_(func(...any) string, ...any) // +
-
-	// Message building methods
+// Message building methods
+type HelpFormatterMessagesInterface interface {
 	StartSection(string)                                                     // +
 	EndSection()                                                             // +
 	AddText(string)                                                          // +
 	AddUsage(string, []ActionInterface, []ActionsContainerInterface, string) // +
 	AddArgument(ActionInterface)                                             // ?
 	AddArguments([]ActionInterface)                                          // +
+}
 
-	// Help-formatting methods
+// Help-formatting methods
+type HelpFormattingMethodsInterface interface {
 	FormatHelp() string               // +
 	formatHelpCallBack(...any) string // +
 	JoinParts_([]string) string       // +
@@ -44,6 +41,16 @@ type HelpFormatterInterface interface {
 	GetHelpString_(action ActionInterface) string                  // +
 	GetDefaultMetaVarForOptional_(action ActionInterface) string   // +
 	GetDefaultMetaVarForPositional_(action ActionInterface) string // +
+}
+
+type HelpFormatterInterface interface {
+	Struct() *HelpFormatter               // +
+	Indent_()                             // +
+	Dedent_()                             // +
+	AddItem_(func(...any) string, ...any) // +
+
+	HelpFormatterMessagesInterface
+	HelpFormattingMethodsInterface
 }
 
 const DefaultTerminalWidth = 80
@@ -588,7 +595,7 @@ func (hf *HelpFormatter) ExpandHelp_(action ActionInterface, defaultMetaVar stri
 
 func (hf *HelpFormatter) IterIndentedSubactions_(action ActionInterface) []ActionInterface {
 	// Get subactions from the action
-	getSubActions := action.GetSubActions
+	getSubActions := action.GetSubActions_
 
 	// Get the subactions
 	subactions := getSubActions()

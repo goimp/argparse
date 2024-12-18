@@ -1,6 +1,5 @@
 package argparse
 
-
 type Type = any
 type TypeFunc = func(string) (any, error)
 type NewActionFuncType = func(*Argument) *Action
@@ -10,12 +9,12 @@ type ActionInterface interface {
 	FormatUsage() string
 	Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error
 	Struct() *Action
-	GetSubActions() []ActionInterface
+	GetSubActions_() []ActionInterface
 }
 
 // Action represents the action associated with an argument.
 type Action struct {
-	*AttributeHolder // Embedding AttributeHolder for its functionality
+	*AttributeHolder_ // Embedding AttributeHolder for its functionality
 
 	OptionStrings []string // The command-line option strings
 	Dest          string   // The destination name where the value will be stored
@@ -29,8 +28,7 @@ type Action struct {
 	MetaVar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
 
-	Container    ActionsContainerInterface
-	GetFormatter any
+	Container ActionsContainerInterface
 }
 
 func NewAction(argument *Argument) *Action {
@@ -83,7 +81,7 @@ func (a *Action) Call(parser *ArgumentParser, namespace *Namespace, values any, 
 	panic("action.Call() not implemented")
 }
 
-func (a *Action) GetSubActions() []ActionInterface {
+func (a *Action) GetSubActions_() []ActionInterface {
 	// panic("action.GetSubActions() not implemented")
 	return nil
 }

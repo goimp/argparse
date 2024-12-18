@@ -7,7 +7,7 @@ import (
 
 // SubParsersAction handles subcommands and their parsers
 type SubParsersAction struct {
-	Action         // Embedding Action to reuse functionality
+	*Action        // Embedding Action to reuse functionality
 	ProgPrefix     string
 	ParserClass    func(kwargs any) (any, error)
 	NameParserMap  map[string]any
@@ -44,7 +44,7 @@ func NewChoicesPseudoAction(name string, aliases []string, help string) *Choices
 // NewSubParsersAction creates a new SubParsersAction instance
 func NewSubParsersAction(argument *Action) *SubParsersAction {
 	return &SubParsersAction{
-		Action: Action{
+		Action: &Action{
 			OptionStrings: argument.OptionStrings,
 			Dest:          argument.Dest,
 			Nargs:         PARSER,
