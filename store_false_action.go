@@ -14,19 +14,23 @@ func NewStoreFalseAction(argument *Argument) ActionInterface {
 	}
 }
 
-// Make sure StoreTrueAction implements ActionInterface
-func (a *StoreFalseAction) Struct() *Action {
-	return a.StoreConstAction.Struct() // Call Struct() from StoreConstAction
-}
+// // Make sure StoreTrueAction implements ActionInterface
+// func (a *StoreFalseAction) Struct() *Action {
+// 	return a.StoreConstAction.Struct() // Call Struct() from StoreConstAction
+// }
 
-func (a *StoreFalseAction) GetMap() map[string]any {
-	return a.StoreConstAction.GetMap()
-}
+// func (a *StoreFalseAction) GetMap() map[string]any {
+// 	return a.StoreConstAction.GetMap()
+// }
 
-func (a *StoreFalseAction) FormatUsage() string {
-	return a.StoreConstAction.FormatUsage()
-}
+// func (a *StoreFalseAction) FormatUsage() string {
+// 	return a.StoreConstAction.FormatUsage()
+// }
 
-func (a *StoreFalseAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
-	return a.StoreConstAction.Call(parser, namespace, values, optionString)
-}
+// func (a *StoreFalseAction) Call(parser *ArgumentParser, namespace *Namespace, values any, optionString string) error {
+// 	return a.StoreConstAction.Call(parser, namespace, values, optionString)
+// }
+
+// func (a *StoreFalseAction) GetSubActions() []ActionInterface {
+// 	return a.StoreConstAction.GetSubActions()
+// }

@@ -1,11 +1,12 @@
 package argparse_test
 
 import (
-	"argparse"
 	"fmt"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/goimp/argparse"
 )
 
 func prettyPrintMap(mapping map[string]any) {

@@ -33,6 +33,7 @@ type ActionsContainerInterface interface {
 	HandleConflictError(ActionInterface, []ConflictingOption)                      // ?
 	HandleConflictResolve(ActionInterface, []ConflictingOption)                    // ?
 	CheckHelp(action ActionInterface)                                              // ?
+	GetFormatter_() any                                                            // -, not done for ArgumentParser
 }
 
 type ActionsContainer struct {
@@ -49,9 +50,9 @@ type ActionsContainer struct {
 	NegativeNumberMatcher      *regexp.Regexp
 	HasNegativeNumberOptionals []bool
 
-	GetFormatter any
-	Title        string
-	Required     bool
+	// GetFormatter any
+	Title    string
+	Required bool
 }
 
 func (ac *ActionsContainer) Struct() *ActionsContainer {
@@ -516,52 +517,7 @@ func (ac *ActionsContainer) CheckHelp(action ActionInterface) {
 	// }
 }
 
-// func (ac *ActionsContainer) createAction(actionName any, argument *Argument) ActionInterface {
-// 	// create the action object, and add it to the parser
-// 	createAction := ac.registryGet("action", actionName, actionName)
-
-// 	callbackVal := reflect.ValueOf(createAction)
-// 	if callbackVal.Kind() != reflect.Func {
-// 		panic(fmt.Sprintf("unknown action: %v: %v", actionName, createAction))
-// 	}
-
-// 	// Prepare the arguments for the function call
-// 	argsVals := []reflect.Value{reflect.ValueOf(argument)}
-
-// 	// Call the function with the prepared arguments
-// 	resultVals := callbackVal.Call(argsVals)
-
-// 	// Get the first result (assumes the function returns one value)
-// 	result := resultVals[0].Interface()
-
-// 	// Перевіряємо, чи результат реалізує інтерфейс ActionInterface
-// 	if action, ok := result.(ActionInterface); ok {
-// 		return action
-// 	}
-
-// 	panic(fmt.Sprintf("result does not implement ActionInterface: %T", result))
-
-// 	// // If result is already *Action, return it
-// 	// if action, ok := result.(*Action); ok {
-// 	// 	return action
-// 	// }
-
-// 	// // If result embeds Action (value), use reflection to find and return a pointer to it
-// 	// val := reflect.ValueOf(result)
-// 	// if val.Kind() == reflect.Ptr {
-// 	// 	val = val.Elem() // Dereference pointer
-// 	// }
-
-// 	// // Search for embedded Action field
-// 	// for i := 0; i < val.NumField(); i++ {
-// 	// 	field := val.Field(i)
-// 	// 	if field.Type() == reflect.TypeOf(Action{}) {
-// 	// 		// Get a pointer to the embedded Action
-// 	// 		return field.Addr().Interface().(*Action)
-// 	// 	}
-// 	// }
-
-// 	// // If no Action is found, panic
-// 	// panic(fmt.Sprintf("result does not embed Action: %T", result))
-
-// }
+func (ac *ActionsContainer) GetFormatter_() any {
+	// Abstract method
+	return nil
+}

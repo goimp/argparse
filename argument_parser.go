@@ -1,19 +1,20 @@
 package argparse
 
 import (
-	"argparse/attribute_holder"
 	"os"
 )
 
 type ArgumentParser struct {
-	*attribute_holder.AttributeHolder
 	*ActionsContainer
+	*AttributeHolder_
 }
 
 type NewArgumentParserFunc = func(kwargs map[string]any) (*ArgumentParser, error)
 
-func NewArgumentParser(kwargs map[string]any) (*ArgumentParser, error) {
-	return &ArgumentParser{}, nil
+func NewArgumentParser(kwargs map[string]any) ActionsContainerInterface {
+	return &ArgumentParser{
+		ActionsContainer: &ActionsContainer{},
+	}
 }
 
 // Pretty __repr__ methods
@@ -28,16 +29,16 @@ func (ap *ArgumentParser) AddSubparsers(kwargs map[string]any) {
 
 }
 
-func (ap *ArgumentParser) AddAction(action *Action) *Action {
+func (ap *ArgumentParser) AddAction(action ActionInterface) ActionInterface {
 	return &Action{}
 }
 
-func (ap *ArgumentParser) GetOptionalActions() []*Action {
-	return []*Action{}
+func (ap *ArgumentParser) GetOptionalActions() []ActionInterface {
+	return []ActionInterface{}
 }
 
-func (ap *ArgumentParser) GetPositionalActions() []*Action {
-	return []*Action{}
+func (ap *ArgumentParser) GetPositionalActions() []ActionInterface {
+	return []ActionInterface{}
 }
 
 // Command line argument parsing methods
@@ -54,31 +55,31 @@ func (ap *ArgumentParser) ParseKnownArgs2(args []any, namespace *Namespace, inte
 
 }
 
-func (ap *ArgumentParser) parseKnownArgs(args []any, namespace *Namespace, intermixed any) {
+func (ap *ArgumentParser) ParseKnownArgs_(args []any, namespace *Namespace, intermixed any) {
 
 }
 
-func (ap *ArgumentParser) readArgsFromFiles(argString string) {
+func (ap *ArgumentParser) ReadArgsFromFiles_(argString string) {
 
 }
 
-func (ap *ArgumentParser) convertArgLineToArgs(argString string) []any {
+func (ap *ArgumentParser) ConvertArgLineToArgs_(argString string) []any {
 	return []any{argString}
 }
 
-func (ap *ArgumentParser) matchArgument(action *Action, argStringsPattern string) {
+func (ap *ArgumentParser) MatchArgument_(action ActionInterface, argStringsPattern string) {
 }
 
-func (ap *ArgumentParser) matchArgumentsPartial(action *Action, argStringsPattern string) {
+func (ap *ArgumentParser) MatchArgumentsPartial_(action ActionInterface, argStringsPattern string) {
 }
 
-func (ap *ArgumentParser) parseOptional(argString string) {
+func (ap *ArgumentParser) ParseOptional_(argString string) {
 }
 
-func (ap *ArgumentParser) getOptionTuples(optionString string) {
+func (ap *ArgumentParser) GetOptionTuples_(optionString string) {
 }
 
-func (ap *ArgumentParser) getNargsPattern(action *Action) {
+func (ap *ArgumentParser) GetNargsPattern_(action ActionInterface) {
 }
 
 // Alt command line argument parsing, allowing free intermix
@@ -112,8 +113,8 @@ func (ap *ArgumentParser) FormatHelp() string {
 	return "Usage: [options]: NOT IMPLEMENTED YET\n" // Example message, replace with actual implementation.
 }
 
-func (ap *ArgumentParser) getFormatter() {
-
+func (ap *ArgumentParser) GetFormatter_() any {
+	return nil
 }
 
 // Help-printing methods

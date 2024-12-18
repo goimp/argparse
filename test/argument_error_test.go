@@ -1,8 +1,9 @@
 package argparse_test
 
 import (
-	"argparse"
 	"testing"
+
+	"github.com/goimp/argparse"
 )
 
 func TestArgumentError(t *testing.T) {

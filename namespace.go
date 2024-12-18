@@ -1,7 +1,6 @@
 package argparse
 
 import (
-	"argparse/attribute_holder"
 	"fmt"
 	"reflect"
 	"strings"
@@ -10,7 +9,7 @@ import (
 // Namespace extends AttributeHolder to store attributes and provides functionality
 // for comparison, existence check, and string representation.
 type Namespace struct {
-	attribute_holder.AttributeHolder
+	*AttributeHolder_
 	attributes map[string]any
 }
 

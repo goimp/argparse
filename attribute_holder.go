@@ -1,4 +1,4 @@
-package attribute_holder
+package argparse
 
 import (
 	"fmt"
@@ -8,14 +8,21 @@ import (
 
 // AttributeHolder provides a representation of a struct in the format:
 // StructName(attr=value, attr=value, ...)
-type AttributeHolder struct{}
+
+type AttributeHolderInterface_ interface {
+	Repr() string
+	GetArgs() []string
+	GetKwargs(v reflect.Value)
+}
+
+type AttributeHolder_ struct{}
 
 // Repr returns a string representation of the struct in the format:
 // StructName(attr=value, attr=value, ...)
-func (a *AttributeHolder) Repr() string {
+func (ah *AttributeHolder_) Repr() string {
 	// Get the type and value of the current struct
-	t := reflect.TypeOf(a).Elem()
-	v := reflect.ValueOf(a).Elem()
+	t := reflect.TypeOf(ah).Elem()
+	v := reflect.ValueOf(ah).Elem()
 
 	// Get the struct name
 	structName := t.Name()
@@ -25,8 +32,8 @@ func (a *AttributeHolder) Repr() string {
 	starArgs := make(map[string]any)
 
 	// Handle args and kwargs
-	argStrings = append(argStrings, a.GetArgs()...)
-	for key, value := range a.GetKwargs(v) {
+	argStrings = append(argStrings, ah.GetArgs()...)
+	for key, value := range ah.GetKwargs(v) {
 		if isValidIdentifier(key) {
 			argStrings = append(argStrings, fmt.Sprintf("%s=%v", key, value))
 		} else {
@@ -44,13 +51,13 @@ func (a *AttributeHolder) Repr() string {
 
 // GetArgs returns the positional arguments of the struct.
 // By default, it returns an empty list. Override in derived structs if needed.
-func (a *AttributeHolder) GetArgs() []string {
+func (ah *AttributeHolder_) GetArgs() []string {
 	return []string{}
 }
 
 // GetKwargs returns the keyword arguments of the struct.
 // It collects all exported fields of the struct as key-value pairs.
-func (a *AttributeHolder) GetKwargs(v reflect.Value) map[string]any {
+func (ah *AttributeHolder_) GetKwargs(v reflect.Value) map[string]any {
 	kwargs := make(map[string]any)
 
 	// Get the type of the current struct

@@ -1,7 +1,6 @@
 package argparse
 
 import (
-	"argparse/copy_items"
 	"fmt"
 )
 
@@ -52,7 +51,7 @@ func (a *AppendAction) Call(parser *ArgumentParser, namespace *Namespace, values
 	if !found {
 		items = []any{}
 	}
-	items = copy_items.CopyItems(items)
+	items = CopyItems(items)
 	items = append(items.([]any), values)
 	namespace.Set(a.Dest, items)
 	return nil

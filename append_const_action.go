@@ -1,9 +1,5 @@
 package argparse
 
-import (
-	"argparse/copy_items"
-)
-
 // AppendConstAction represents an action that appends a constant value to a slice.
 type AppendConstAction struct {
 	*Action // Embedding Action to reuse functionality
@@ -42,7 +38,7 @@ func (a *AppendConstAction) Call(parser *ArgumentParser, namespace *Namespace, v
 	if !found {
 		items = []any{}
 	}
-	items = copy_items.CopyItems(items)
+	items = CopyItems(items)
 	items = append(items.([]any), a.Const)
 	namespace.Set(a.Dest, items)
 	return nil
