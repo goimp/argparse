@@ -20,7 +20,7 @@ func NewAppendConstAction(argument *Argument) ActionInterface {
 			Default:       argument.Default,
 			Required:      argument.Required,
 			Help:          argument.Help,
-			Metavar:       argument.Metavar,
+			MetaVar:       argument.MetaVar,
 			Deprecated:    argument.Deprecated,
 		},
 	}

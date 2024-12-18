@@ -181,7 +181,7 @@ func (ac *ActionsContainer) AddArgument(argument *Argument) ActionInterface {
 	if args == nil || (len(args) == 1 && !isArgInChars(args[0][:1], chars)) {
 		// Handle positional arguments
 		if argument.Dest != "" {
-			panic("Dest supplied twice for positional argument, did you mean Metavar")
+			panic("Dest supplied twice for positional argument, did you mean MetaVar")
 		}
 		argument = ac.GetPositionalArgument(argument)
 	} else {

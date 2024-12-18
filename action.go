@@ -28,11 +28,12 @@ type Action struct {
 	Choices       []any    // The valid values for this argument
 	Required      bool     // Whether the argument is required
 	Help          string   // The help description for the argument
-	Metavar       any      // The name to be used in help output
+	MetaVar       any      // The name to be used in help output
 	Deprecated    bool     // Whether the argument is deprecated
 
-	Container    ActionsContainerInterface
-	GetFormatter any
+	Container     ActionsContainerInterface
+	GetFormatter  any
+	GetSubactions func() []ActionInterface
 }
 
 func NewAction(argument *Argument) *Action {
@@ -46,7 +47,7 @@ func NewAction(argument *Argument) *Action {
 		Choices:       argument.Choices,
 		Required:      argument.Required,
 		Help:          argument.Help,
-		Metavar:       argument.Metavar,
+		MetaVar:       argument.MetaVar,
 		Deprecated:    argument.Deprecated,
 	}
 }
@@ -67,7 +68,7 @@ func (a *Action) GetMap() map[string]any {
 		"Choices":       a.Choices,
 		"Required":      a.Required,
 		"Help":          a.Help,
-		"Metavar":       a.Metavar,
+		"MetaVar":       a.MetaVar,
 		"Deprecated":    a.Deprecated,
 	}
 }

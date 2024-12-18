@@ -62,7 +62,7 @@ func (e *ArgumentTypeError) Error() string {
 
 // 	// Example with metavar
 // 	arg2 := &Argument{
-// 		Metavar: "FILE",
+// 		MetaVar: "FILE",
 // 	}
 // 	err = NewArgumentError(arg2, "file not found")
 // 	fmt.Println(err.Error()) // Output: argument FILE: file not found

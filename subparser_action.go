@@ -36,7 +36,7 @@ func NewChoicesPseudoAction(name string, aliases []string, help string) *Choices
 			OptionStrings: []string{}, // Empty slice as per the original code
 			Dest:          dest,
 			Help:          help,
-			Metavar:       metavar,
+			MetaVar:       metavar,
 		},
 	}
 }
@@ -50,7 +50,7 @@ func NewSubParsersAction(argument *Action) *SubParsersAction {
 			Nargs:         PARSER,
 			Required:      argument.Required,
 			Help:          argument.Help,
-			Metavar:       argument.Metavar,
+			MetaVar:       argument.MetaVar,
 		},
 		// ProgPrefix:     prog,
 		// ParserClass:    parserClass,

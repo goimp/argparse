@@ -36,7 +36,7 @@ func NewStoreAction(argument *Argument) ActionInterface {
 			Choices:       argument.Choices,
 			Required:      argument.Required,
 			Help:          argument.Help,
-			Metavar:       argument.Metavar,
+			MetaVar:       argument.MetaVar,
 			Deprecated:    argument.Deprecated,
 		},
 	}

@@ -14,7 +14,7 @@ func TestAction(t *testing.T) {
 		Default:       nil,
 		Required:      false,
 		Help:          "Enable verbose output",
-		Metavar:       "VERBOSE",
+		MetaVar:       "VERBOSE",
 	}
 
 	// Test FormatUsage

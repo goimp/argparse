@@ -17,9 +17,9 @@ func GetActionName(argument *Action) string {
 	}
 
 	// If metavar is present
-	if metavar, ok := argument.Metavar.(string); ok && metavar != SUPPRESS {
+	if metavar, ok := argument.MetaVar.(string); ok && metavar != SUPPRESS {
 		return metavar
-	} else if metavar, ok := argument.Metavar.([]string); ok {
+	} else if metavar, ok := argument.MetaVar.([]string); ok {
 		if argument.Nargs == ZERO_OR_MORE && len(metavar) == 2 {
 			return fmt.Sprintf("%s[, %s]", metavar[0], metavar[1])
 		} else if argument.Nargs == ONE_OR_MORE {

@@ -25,7 +25,7 @@ func TestArgumentError(t *testing.T) {
 
 	// Test with metavar
 	arg = &argparse.Action{
-		Metavar: "FILE",
+		MetaVar: "FILE",
 	}
 	err = argparse.NewArgumentError(arg, "file not found")
 	expected = "argument FILE: file not found"

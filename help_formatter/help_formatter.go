@@ -3,6 +3,7 @@ package help_formatter
 import (
 	"argparse"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -23,6 +24,24 @@ type HelpFormatterInterface interface {
 
 	FormatHelp(...any) string
 	JoinParts_([]string) string
+	FormatUsage_(string, []argparse.ActionInterface, []argparse.ActionsContainerInterface, string) string
+	FormatActionsUsage_([]argparse.ActionInterface, []argparse.ActionsContainerInterface) string
+	GetActionsUsageParts_([]argparse.ActionInterface, []argparse.ActionsContainerInterface) []string
+
+	FormatText_(string) string
+	FormatAction_(argparse.ActionInterface) string
+	FormatActionInvocation_(argparse.ActionInterface) string
+
+	MetaVarFormatter_(argparse.ActionInterface, string) func(int)
+	FormatArgs_(argparse.ActionInterface, string) string
+	ExpandHelp_(argparse.ActionInterface, string) string
+	IterIndentedSubactions_(argparse.ActionInterface) []argparse.ActionInterface
+	SplitLines_(string, int) []string
+	FillText_(string, int, string) string
+
+	GetHelpString_(action argparse.ActionInterface) string
+	GetDefaultMetaVarForOptional_(action argparse.ActionInterface) string
+	GetDefaultMetaVarForPositional_(action argparse.ActionInterface) string
 }
 
 const DefaultTerminalWidth = 80
@@ -182,7 +201,7 @@ func (hf *HelpFormatter) AddArgument(action argparse.ActionInterface) {
 		getInvocation := hf.FormatActionInvocation_
 		invocationLengths := []int{len(getInvocation(action)) + hf.CurrentIndent}
 		for _, subaction := range hf.IterIndentedSubactions_(action) {
-			invocationLengths = append(invocationLengths, len(getInvocation(subaction)+hf.CurrentIndent))
+			invocationLengths = append(invocationLengths, len(getInvocation(subaction))+hf.CurrentIndent)
 		}
 
 		// update the maximum item length
@@ -231,9 +250,9 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 		usage = fmt.Sprintf(usage, hf.Prog_)
 	} else if usage == "" && len(actions) == 0 {
 		// if no optionals or positionals are available, usage is just prog
-		usage = fmt.Sprintf("%(prog)s", hf.Prog_)
+		usage = hf.Prog_
 	} else if usage == "" {
-		prog := fmt.Sprintf("%(prog)s", hf.Prog_)
+		prog := hf.Prog_
 
 		// split optionals from positionals
 		optionals := []argparse.ActionInterface{}
@@ -248,7 +267,7 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 		}
 
 		// build full usage string
-		format := hf.FormatActionUsage
+		format := hf.FormatActionsUsage_
 		actionUsage := format(append(optionals, positionals...), groups)
 		sList := []string{}
 		if prog != "" {
@@ -263,8 +282,8 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 		textWidth := hf.Width - hf.CurrentIndent
 		if len(prefix)+len(usage) > textWidth {
 			// break usage into wrappable parts
-			optParts := hf.GetActionsUsageParts(optionals, groups)
-			posParts := hf.GetActionsUsageParts(positionals, groups)
+			optParts := hf.GetActionsUsageParts_(optionals, groups)
+			posParts := hf.GetActionsUsageParts_(positionals, groups)
 
 			// helper for wrapping lines
 			getLines := func(parts []string, indent string, prefix string) []string {
@@ -310,7 +329,7 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 			} else {
 				// if prog is long, put it on its own line
 				indent := strings.Repeat(" ", len(prefix))
-				parts := append(optParts, posParts)
+				parts := append(optParts, posParts...)
 				lines = getLines(parts, indent, "")
 				if len(lines) > 1 {
 					lines = []string{}
@@ -328,38 +347,126 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 	return fmt.Sprintf("%s%s\n\n", prefix, usage)
 }
 
-// // NewHelpFormatter creates a new instance of HelpFormatter
-// func NewHelpFormatter(prog string, indentIncrement, maxHelpPosition, width int) *HelpFormatter {
-// 	// Default width setting
-// 	if width == 0 {
-// 		width = getTerminalWidth() - 2
-// 	}
+func (hf *HelpFormatter) FormatActionsUsage_(actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface) string {
+	return strings.Join(hf.GetActionsUsageParts_(actions, groups), " ")
+}
 
-// 	// indentIncrement = 2 //
+func (hf *HelpFormatter) GetActionsUsageParts_(actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface) []string {
+	// FIXME: Not done
+	return []string{}
+}
 
-// 	// Ensure maxHelpPosition is not too large
-// 	maxHelpPosition = min(maxHelpPosition, max(width-20, indentIncrement*2))
+func (hf *HelpFormatter) FormatText_(text string) string {
+	// FIXME: Not done
+	return ""
+}
 
-// 	// Create a new HelpFormatter
-// 	return &HelpFormatter{
-// 		Prog:              prog,
-// 		IndentIncrement:   indentIncrement,
-// 		MaxHelpPosition:   maxHelpPosition,
-// 		Width:             width,
-// 		CurrentIndent:     0,
-// 		Level:             0,
-// 		ActionMaxLength:   0,
-// 		RootSection:       &Section{Formatter: nil}, // Root section
-// 		CurrentSection:    &Section{Formatter: nil}, // Current section
-// 		WhitespaceMatcher: regexp.MustCompile(`\s+`),
-// 		LongBreakMatcher:  regexp.MustCompile(`\n\n\n+`),
-// 	}
+func (hf *HelpFormatter) FormatAction_(action argparse.ActionInterface) string {
+	// FIXME: Not done
+	return ""
+}
+
+func (hf *HelpFormatter) FormatActionInvocation_(action argparse.ActionInterface) string {
+	// FIXME: Not done
+	return ""
+}
+
+func (hf *HelpFormatter) MetaVarFormatter_(action argparse.ActionInterface, defaultMetaVar string) func(tupleSize int) {
+	// FIXME: Not done
+	return nil
+}
+
+func (hf *HelpFormatter) FormatArgs_(action argparse.ActionInterface, defaultMetaVar string) string {
+	// FIXME: Not done
+	return ""
+}
+
+func (hf *HelpFormatter) ExpandHelp_(action argparse.ActionInterface, defaultMetaVar string) string {
+	// FIXME: Not done
+	return ""
+}
+
+func (hf *HelpFormatter) IterIndentedSubactions_(action argparse.ActionInterface) []argparse.ActionInterface {
+	// FIXME: Not done
+	return []argparse.ActionInterface{}
+}
+
+// func (hf *HelpFormatter) IterIndentedSubactions_(action argparse.ActionInterface) <-chan argparse.ActionInterface {
+// 	ch := make(chan argparse.ActionInterface)
+
+// 	go func() {
+// 		defer close(ch) // Ensure the channel is closed when done
+
+// 		var subactions []argparse.ActionInterface
+// 		if action.Struct().GetSubactions != nil {
+// 			subactions = action.Struct().GetSubactions()
+// 		}
+
+// 		hf.Indent_()
+// 		defer hf.Dedent_() // Ensure dedent is called even if the loop exits
+
+// 		for _, subaction := range subactions {
+// 			ch <- subaction // Send each subaction to the channel
+// 		}
+// 	}()
+
+// 	return ch
 // }
 
-// // getTerminalWidth attempts to get the terminal's width, similar to shutil.get_terminal_size()
-// func getTerminalWidth() int {
-// 	return 80
-// }
+func (hf *HelpFormatter) SplitLines_(text string, width int) []string {
+	// FIXME: Not done
+	// if width <= 0 {
+	// 	panic("wrapText: width must be greater than 0")
+	// }
+
+	var lines []string
+	// var line strings.Builder
+	// currentWidth := 0
+
+	// words := strings.Fields(text) // Split text into words
+	// for _, word := range words {
+	// 	wordLen := utf8.RuneCountInString(word)
+
+	// 	// If adding the word exceeds the width, finalize the current line
+	// 	if currentWidth+wordLen+1 > width && currentWidth > 0 {
+	// 		lines = append(lines, line.String())
+	// 		line.Reset()
+	// 		currentWidth = 0
+	// 	}
+
+	// 	// Add the word to the line
+	// 	if currentWidth > 0 {
+	// 		line.WriteString(" ")
+	// 		currentWidth++
+	// 	}
+	// 	line.WriteString(word)
+	// 	currentWidth += wordLen
+	// }
+
+	// // Add the last line if there's remaining text
+	// if line.Len() > 0 {
+	// 	lines = append(lines, line.String())
+	// }
+
+	return lines
+}
+
+func (hf *HelpFormatter) FillText_(text string, width int, indent string) string {
+	// FIXME: not done
+	return ""
+}
+
+func (hf *HelpFormatter) GetHelpString_(action argparse.ActionInterface) string {
+	return action.Struct().Help
+}
+
+func (hf *HelpFormatter) GetDefaultMetaVarForOptional_(action argparse.ActionInterface) string {
+	return strings.ToUpper(action.Struct().Dest)
+}
+
+func (hf *HelpFormatter) GetDefaultMetaVarForPositional_(action argparse.ActionInterface) string {
+	return action.Struct().Dest
+}
 
 // min returns the smaller of two integers
 func min(nums ...int) int {
@@ -391,90 +498,46 @@ func max(nums ...int) int {
 	return maxVal
 }
 
-// // FormatHelp formats the help message for the command.
-// func (hf *HelpFormatter) FormatHelp() string {
-// 	// Implement formatting logic here (simplified for demonstration)
-// 	return fmt.Sprintf("Usage: %s [options]", hf.Prog)
-// }
+type RawDescriptionHelpFormatter struct {
+	*HelpFormatter
+}
 
-// // Repr returns a string representation of the HelpFormatter
-// func (hf *HelpFormatter) Repr() string {
-// 	return fmt.Sprintf("%s(indentIncrement=%d, maxHelpPosition=%d, width=%d)", hf.Prog, hf.IndentIncrement, hf.MaxHelpPosition, hf.Width)
-// }
+func (fh *RawDescriptionHelpFormatter) FillText_(text string, width int, indent string) string {
+	// FIXME: not done
+	return ""
+}
 
-// // _indent increments the current indent and level
-// func (hf *HelpFormatter) indent() {
-// 	hf.CurrentIndent += hf.IndentIncrement
-// 	hf.Level++
-// }
+type RawTextHelpFormatter struct {
+	*HelpFormatter
+}
 
-// // _dedent decrements the current indent and level
-// func (hf *HelpFormatter) dedent() {
-// 	hf.CurrentIndent -= hf.IndentIncrement
-// 	if hf.CurrentIndent < 0 {
-// 		panic("Indent decreased below 0.")
-// 	}
-// 	hf.Level--
-// }
+func (fh *RawTextHelpFormatter) FillText_(text string, width int, indent string) string {
+	// FIXME: not done
+	return ""
+}
 
-// func (hf *HelpFormatter) addItem(funcToAdd func(args ...interface{}) string, args ...interface{}) {
-// 	hf.CurrentSection.AddItem(funcToAdd, args)
-// }
+func (fh *RawTextHelpFormatter) SplitLines_(text string, width int) []string {
+	// FIXME: not done
+	return []string{}
+}
 
-// // ========================
-// // Message building methods
-// // ========================
+type ArgumentDefaultsHelpFormatter struct {
+	*HelpFormatter
+}
 
-// // startSection starts a new section with a given heading.
-// func (hf *HelpFormatter) startSection(heading string) {
-// 	hf.indent()
-// 	section := &Section{
-// 		Formatter: hf,
-// 		Parent:    hf.CurrentSection,
-// 		Heading:   heading,
-// 		Items:     []SectionItem{},
-// 	}
-// 	hf.CurrentSection.Items = append(hf.CurrentSection.Items, SectionItem{
-// 		FormatFunc: section.formatHelp,
-// 		Args:       nil,
-// 	})
-// 	hf.CurrentSection = section
-// }
+func (fh *ArgumentDefaultsHelpFormatter) GetHelpString_(action argparse.ActionInterface) string {
+	// FIXME: not done
+	return ""
+}
 
-// // endSection ends the current section and dedents.
-// func (hf *HelpFormatter) endSection() {
-// 	hf.CurrentSection = hf.CurrentSection.Parent
-// 	hf.dedent()
-// }
+type MetaVarTypeHelpFormatter struct {
+	*HelpFormatter
+}
 
-// // addText adds a plain text item to the current section.
-// func (hf *HelpFormatter) addText(text string) {
-// 	if text != argparse.SUPPRESS && text != "" {
-// 		hf.CurrentSection.Items = append(hf.CurrentSection.Items, SectionItem{
-// 			FormatFunc: hf.formatText,
-// 			Args:       []interface{}{text},
-// 		})
-// 	}
-// }
+func (fh *MetaVarTypeHelpFormatter) GetDefaultMetaVarForOptional_(action argparse.ActionInterface) string {
+	return reflect.TypeOf(action.Struct().Type).String()
+}
 
-// // addUsage adds a usage item to the current section.
-// func (hf *HelpFormatter) addUsage(usage string, actions []string, groups []string, prefix string) {
-// 	if usage != argparse.SUPPRESS {
-// 		// Example: Use the data to format the usage string in a more complex manner
-// 		usageText := fmt.Sprintf("Usage: %s %s", usage, strings.Join(actions, " "))
-// 		hf.CurrentSection.Items = append(hf.CurrentSection.Items, SectionItem{
-// 			FormatFunc: hf.formatUsage,
-// 			Args:       []interface{}{usageText},
-// 		})
-// 	}
-// }
-
-// // formatText formats the text item.
-// func (hf *HelpFormatter) formatText(args ...interface{}) string {
-// 	return fmt.Sprintf("%s", args[0])
-// }
-
-// // formatUsage formats the usage item.
-// func (hf *HelpFormatter) formatUsage(args ...interface{}) string {
-// 	return fmt.Sprintf("%s", args[0])
-// }
+func (fh *MetaVarTypeHelpFormatter) GetDefaultMetaVarForPositional_(action argparse.ActionInterface) string {
+	return reflect.TypeOf(action.Struct().Type).String()
+}
