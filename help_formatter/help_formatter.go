@@ -32,7 +32,7 @@ type HelpFormatterInterface interface {
 	FormatAction_(argparse.ActionInterface) string
 	FormatActionInvocation_(argparse.ActionInterface) string
 
-	MetaVarFormatter_(argparse.ActionInterface, string) func(int)
+	MetaVarFormatter_(argparse.ActionInterface, string) func(int) []string
 	FormatArgs_(argparse.ActionInterface, string) string
 	ExpandHelp_(argparse.ActionInterface, string) string
 	IterIndentedSubactions_(argparse.ActionInterface) []argparse.ActionInterface
@@ -85,7 +85,7 @@ func (s *Section_) FormatHelp(...any) string {
 	var heading string
 	// add the heading if the section was non-empty
 	if s.Heading != argparse.SUPPRESS && s.Heading != "" {
-		currentIndent := s.Formatter.Struct().CurrentIndent
+		currentIndent := s.Formatter.Struct().CurrentIndent_
 		headingText := fmt.Sprintf("%s:", s.Heading)
 		heading = fmt.Sprintf("%*s%s\n", currentIndent, "", headingText)
 	} else {
@@ -101,8 +101,8 @@ type HelpFormatter struct {
 	Prog_             string
 	IndentIncrement   int
 	MaxHelpPosition   int
-	Width             int
-	CurrentIndent     int
+	Width_            int
+	CurrentIndent_    int
 	Level             int
 	ActionMaxLength   int
 	RootSection       *Section_
@@ -123,15 +123,22 @@ func NewHelpFormatter(prog string, indentIncrement, maxHelpPosition, width int) 
 		Prog_:           prog,
 		IndentIncrement: indentIncrement,
 		MaxHelpPosition: min(maxHelpPosition, max(width-20, indentIncrement*2)),
-		Width:           width,
-		CurrentIndent:   0,
+		Width_:          width,
+		CurrentIndent_:  0,
 		Level:           0,
 		ActionMaxLength: 0,
-		// RootSection: ,
-		// CurrentSection: ,
+
 		WhitespaceMatcher: regexp.MustCompile(`\s+`),
 		LongBreakMatcher:  regexp.MustCompile(`\n\n\n+`),
 	}
+
+	rootSection := &Section_{
+		Formatter: formatter,
+		Parent:    nil,
+	}
+
+	formatter.RootSection = rootSection
+	formatter.CurrentSection = formatter.RootSection
 
 	return formatter
 }
@@ -141,13 +148,13 @@ func (hf *HelpFormatter) Struct() *HelpFormatter {
 }
 
 func (hf *HelpFormatter) Indent_() {
-	hf.CurrentIndent += hf.IndentIncrement
+	hf.CurrentIndent_ += hf.IndentIncrement
 	hf.Level++
 }
 
 func (hf *HelpFormatter) Dedent_() {
-	hf.CurrentIndent -= hf.IndentIncrement
-	if hf.CurrentIndent < 0 {
+	hf.CurrentIndent_ -= hf.IndentIncrement
+	if hf.CurrentIndent_ < 0 {
 		panic("Indent decreased below 0.")
 	}
 	hf.Level--
@@ -199,9 +206,9 @@ func (hf *HelpFormatter) AddArgument(action argparse.ActionInterface) {
 
 		// find all invocations
 		getInvocation := hf.FormatActionInvocation_
-		invocationLengths := []int{len(getInvocation(action)) + hf.CurrentIndent}
+		invocationLengths := []int{len(getInvocation(action)) + hf.CurrentIndent_}
 		for _, subaction := range hf.IterIndentedSubactions_(action) {
-			invocationLengths = append(invocationLengths, len(getInvocation(subaction))+hf.CurrentIndent)
+			invocationLengths = append(invocationLengths, len(getInvocation(subaction))+hf.CurrentIndent_)
 		}
 
 		// update the maximum item length
@@ -239,7 +246,6 @@ func (hf *HelpFormatter) JoinParts_(partStrings []string) string {
 	return strings.Join(parts, "")
 }
 
-// FIXME: not done
 func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInterface, groups []argparse.ActionsContainerInterface, prefix string) string {
 	if prefix != "" {
 		prefix = "usage: "
@@ -279,7 +285,7 @@ func (hf *HelpFormatter) FormatUsage_(usage string, actions []argparse.ActionInt
 		usage = strings.Join(sList, " ")
 
 		// wrap the usage parts if it's too long
-		textWidth := hf.Width - hf.CurrentIndent
+		textWidth := hf.Width_ - hf.CurrentIndent_
 		if len(prefix)+len(usage) > textWidth {
 			// break usage into wrappable parts
 			optParts := hf.GetActionsUsageParts_(optionals, groups)
@@ -357,8 +363,12 @@ func (hf *HelpFormatter) GetActionsUsageParts_(actions []argparse.ActionInterfac
 }
 
 func (hf *HelpFormatter) FormatText_(text string) string {
-	// FIXME: Not done
-	return ""
+	if strings.Contains(text, "%s") {
+		text = fmt.Sprintf(text, hf.Prog_)
+	}
+	textWidth := max(hf.Width_-hf.CurrentIndent_, 11)
+	indent := strings.Repeat(" ", hf.CurrentIndent_)
+	return hf.FillText_(text, textWidth, indent)
 }
 
 func (hf *HelpFormatter) FormatAction_(action argparse.ActionInterface) string {
@@ -371,9 +381,33 @@ func (hf *HelpFormatter) FormatActionInvocation_(action argparse.ActionInterface
 	return ""
 }
 
-func (hf *HelpFormatter) MetaVarFormatter_(action argparse.ActionInterface, defaultMetaVar string) func(tupleSize int) {
+func (hf *HelpFormatter) MetaVarFormatter_(action argparse.ActionInterface, defaultMetaVar string) func(int) []string {
 	// FIXME: Not done
-	return nil
+	// return nil
+	var result string
+	if action.Struct().MetaVar != "" {
+		result = action.Struct().MetaVar.(string)
+	} else if action.Struct().Choices != nil {
+		var strChoices []string
+		for _, choice := range action.Struct().Choices {
+			strChoices = append(strChoices, fmt.Sprintf("%s", choice))
+		}
+		result = fmt.Sprintf("%s", strings.Join(strChoices, ","))
+	} else {
+		result = defaultMetaVar
+	}
+
+	// format := func(tupleSize int) interface{} {
+	// 	// Check if result is already a tuple (slice in Go)
+
+	// 	result
+	// }
+	// return format
+
+	format := func(tupleSize int) []string {
+		return []string{result}
+	}
+	return format
 }
 
 func (hf *HelpFormatter) FormatArgs_(action argparse.ActionInterface, defaultMetaVar string) string {
